@@ -18,7 +18,7 @@
 		</whitelist>
 		<blacklist>
 			<directory suffix=".php">../tests/Unit</directory>
-			<directory>../tests/Unit/Fixures</directory>
+			<directory>../tests/Unit/Fixtures</directory>
 			<directory>../vendor</directory>
 		</blacklist>
 	</filter>
