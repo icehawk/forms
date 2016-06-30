@@ -19,12 +19,12 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"hollodotme\\RepoTemplate\\": "src/"
+			"IceHawk\\Forms\\": "src/"
 		}
 	},
 	"autoload-dev": {
 		"psr-4": {
-			"hollodotme\\RepoTemplate\\Tests\\Unit\\": "tests/Unit/"
+			"IceHawk\\Forms\\Tests\\Unit\\": "tests/Unit/"
 		}
 	}
 }

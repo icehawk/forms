@@ -1,7 +1,6 @@
 <phpunit
 	bootstrap="../tests/Unit/bootstrap.php"
 	verbose="true"
-	checkForUnintentionallyCoveredCode="false"
 	beStrictAboutOutputDuringTests="true"
 	beStrictAboutTestSize="true"
 	colors="true"
