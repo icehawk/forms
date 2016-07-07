@@ -8,7 +8,7 @@ namespace IceHawk\Forms;
 use IceHawk\Forms\Defaults\Token;
 use IceHawk\Forms\Exceptions\TokenMismatch;
 use IceHawk\Forms\Interfaces\IdentifiesForm;
-use IceHawk\Forms\Interfaces\IdentifiesFormRequest;
+use IceHawk\Forms\Interfaces\IdentifiesFormRequestSource;
 use IceHawk\Forms\Interfaces\ProvidesFeedback;
 
 /**
@@ -20,7 +20,7 @@ class Form
 	/** @var IdentifiesForm */
 	private $id;
 
-	/** @var IdentifiesFormRequest */
+	/** @var IdentifiesFormRequestSource */
 	private $token;
 
 	/** @var array */
@@ -54,9 +54,9 @@ class Form
 	}
 
 	/**
-	 * @param IdentifiesFormRequest|null $token
+	 * @param IdentifiesFormRequestSource|null $token
 	 */
-	public function renewToken( IdentifiesFormRequest $token = null )
+	public function renewToken( IdentifiesFormRequestSource $token = null )
 	{
 		if ( $token === null )
 		{
@@ -69,16 +69,16 @@ class Form
 	}
 
 	/**
-	 * @param IdentifiesFormRequest $token
+	 * @param IdentifiesFormRequestSource $token
 	 *
 	 * @return bool
 	 */
-	public function isValidToken( IdentifiesFormRequest $token ) : bool
+	public function isValidToken( IdentifiesFormRequestSource $token ) : bool
 	{
 		return $this->token->equals( $token );
 	}
 
-	public function validateToken( IdentifiesFormRequest $token )
+	public function validateToken( IdentifiesFormRequestSource $token )
 	{
 		if ( !$this->isValidToken( $token ) )
 		{
@@ -87,9 +87,9 @@ class Form
 	}
 
 	/**
-	 * @return IdentifiesFormRequest
+	 * @return IdentifiesFormRequestSource
 	 */
-	public function getToken() : IdentifiesFormRequest
+	public function getToken() : IdentifiesFormRequestSource
 	{
 		return $this->token;
 	}

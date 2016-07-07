@@ -5,7 +5,7 @@
 
 namespace IceHawk\Forms\Exceptions;
 
-use IceHawk\Forms\Interfaces\IdentifiesFormRequest;
+use IceHawk\Forms\Interfaces\IdentifiesFormRequestSource;
 
 /**
  * Class TokenMismatch
@@ -13,19 +13,19 @@ use IceHawk\Forms\Interfaces\IdentifiesFormRequest;
  */
 final class TokenMismatch extends FormsException
 {
-	/** @var IdentifiesFormRequest */
+	/** @var IdentifiesFormRequestSource */
 	private $formToken;
 
-	/** @var IdentifiesFormRequest */
+	/** @var IdentifiesFormRequestSource */
 	private $checkToken;
 
 	/**
-	 * @param IdentifiesFormRequest $formToken
-	 * @param IdentifiesFormRequest $checkToken
+	 * @param IdentifiesFormRequestSource $formToken
+	 * @param IdentifiesFormRequestSource $checkToken
 	 *
 	 * @return $this
 	 */
-	public function withTokens( IdentifiesFormRequest $formToken, IdentifiesFormRequest $checkToken )
+	public function withTokens( IdentifiesFormRequestSource $formToken, IdentifiesFormRequestSource $checkToken )
 	{
 		$this->formToken  = $formToken;
 		$this->checkToken = $checkToken;
@@ -34,7 +34,7 @@ final class TokenMismatch extends FormsException
 	}
 
 	/**
-	 * @return IdentifiesFormRequest
+	 * @return IdentifiesFormRequestSource
 	 */
 	public function getFormToken()
 	{
@@ -42,7 +42,7 @@ final class TokenMismatch extends FormsException
 	}
 
 	/**
-	 * @return IdentifiesFormRequest
+	 * @return IdentifiesFormRequestSource
 	 */
 	public function getCheckToken()
 	{
