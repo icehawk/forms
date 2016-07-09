@@ -5,6 +5,7 @@
 
 namespace IceHawk\Forms;
 
+use IceHawk\Forms\Exceptions\TokenHasExpired;
 use IceHawk\Forms\Exceptions\TokenMismatch;
 use IceHawk\Forms\Interfaces\IdentifiesForm;
 use IceHawk\Forms\Interfaces\IdentifiesFormRequestSource;
@@ -45,10 +46,15 @@ class Form implements ProvidesFormData
 	public function reset()
 	{
 		$this->data       = [ ];
-		$this->feedbacks  = [ ];
 		$this->dataWasSet = false;
 
+		$this->resetFeedbacks();
 		$this->renewToken();
+	}
+
+	public function resetFeedbacks()
+	{
+		$this->feedbacks = [ ];
 	}
 
 	/**
@@ -79,17 +85,33 @@ class Form implements ProvidesFormData
 	 *
 	 * @return bool
 	 */
-	public function isValidToken( IdentifiesFormRequestSource $token ) : bool
+	public function isTokenValid( IdentifiesFormRequestSource $token ) : bool
 	{
-		return $this->token->equals( $token );
+		return ($this->token->equals( $token ) && !$this->token->isExpired());
 	}
 
+	/**
+	 * @param IdentifiesFormRequestSource $token
+	 *
+	 * @throws TokenHasExpired
+	 * @throws TokenMismatch
+	 */
 	public function guardTokenIsValid( IdentifiesFormRequestSource $token )
 	{
-		if ( !$this->isValidToken( $token ) )
+		if ( !$this->token->equals( $token ) )
 		{
 			throw (new TokenMismatch())->withTokens( $this->token, $token );
 		}
+
+		if ( $this->token->isExpired() )
+		{
+			throw new TokenHasExpired();
+		}
+	}
+
+	public function hasTokenExpired() : bool
+	{
+		return $this->token->isExpired();
 	}
 
 	/**

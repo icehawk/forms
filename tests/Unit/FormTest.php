@@ -5,6 +5,7 @@
 
 namespace IceHawk\Forms\Tests\Unit;
 
+use IceHawk\Forms\Exceptions\TokenHasExpired;
 use IceHawk\Forms\Exceptions\TokenMismatch;
 use IceHawk\Forms\Feedback;
 use IceHawk\Forms\Form;
@@ -84,14 +85,14 @@ class FormTest extends \PHPUnit_Framework_TestCase
 
 		$initialToken = $form->getToken();
 
-		$this->assertTrue( $form->isValidToken( $initialToken ) );
+		$this->assertTrue( $form->isTokenValid( $initialToken ) );
 
 		$form->renewToken();
 
-		$this->assertFalse( $form->isValidToken( $initialToken ) );
+		$this->assertFalse( $form->isTokenValid( $initialToken ) );
 	}
 
-	public function testInvalidTokenThrowsExceptionWhenGuarding()
+	public function testThrowsExceptionWhenGuardingTokenStringValidity()
 	{
 		$this->setExpectedExceptionRegExp( TokenMismatch::class );
 
@@ -104,6 +105,37 @@ class FormTest extends \PHPUnit_Framework_TestCase
 		$form->renewToken();
 
 		$form->guardTokenIsValid( $initialToken );
+	}
+
+	public function testThrowsExceptionWhenGuardingTokenExpiry()
+	{
+		$this->setExpectedExceptionRegExp( TokenHasExpired::class );
+
+		$formId = $this->getFormIdMock();
+		$form   = new Form( $formId );
+
+		$form->renewToken( (new Token())->expiresIn( 1 ) );
+		$token = $form->getToken();
+
+		$form->guardTokenIsValid( $token );
+
+		sleep( 2 );
+
+		$form->guardTokenIsValid( $token );
+	}
+
+	public function testCanCheckIfTokenHasExpired()
+	{
+		$formId = $this->getFormIdMock();
+		$form   = new Form( $formId );
+
+		$form->renewToken( (new Token())->expiresIn( 1 ) );
+
+		$this->assertFalse( $form->hasTokenExpired() );
+
+		sleep( 2 );
+
+		$this->assertTrue( $form->hasTokenExpired() );
 	}
 
 	public function testFormDataIsEmptyArrayAfterConstruction()
