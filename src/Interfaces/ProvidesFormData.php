@@ -9,7 +9,7 @@ namespace IceHawk\Forms\Interfaces;
  * Interface ProvidesFormData
  * @package IceHawk\Forms\Interfaces
  */
-interface ProvidesFormData
+interface ProvidesFormData extends \JsonSerializable
 {
 	public function getData() : array;
 
@@ -20,4 +20,6 @@ interface ProvidesFormData
 	public function set( string $key, $value );
 
 	public function unset( string $key );
+
+	public function wasDataSet() : bool;
 }

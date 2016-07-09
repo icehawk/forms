@@ -30,6 +30,9 @@ class Form implements ProvidesFormData
 	/** @var array|ProvidesFeedback[] */
 	private $feedbacks;
 
+	/** @var bool */
+	private $dataWasSet;
+
 	/**
 	 * @param IdentifiesForm $formId
 	 */
@@ -41,8 +44,10 @@ class Form implements ProvidesFormData
 
 	public function reset()
 	{
-		$this->data      = [ ];
-		$this->feedbacks = [ ];
+		$this->data       = [ ];
+		$this->feedbacks  = [ ];
+		$this->dataWasSet = false;
+
 		$this->renewToken();
 	}
 
@@ -100,7 +105,8 @@ class Form implements ProvidesFormData
 	 */
 	public function setData( array $data )
 	{
-		$this->data = $data;
+		$this->data       = $data;
+		$this->dataWasSet = true;
 	}
 
 	/**
@@ -138,6 +144,7 @@ class Form implements ProvidesFormData
 	public function set( string $key, $value )
 	{
 		$this->data[ $key ] = $value;
+		$this->dataWasSet   = true;
 	}
 
 	/**
@@ -146,6 +153,14 @@ class Form implements ProvidesFormData
 	public function unset( string $key )
 	{
 		unset($this->data[ $key ]);
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function wasDataSet() : bool
+	{
+		return $this->dataWasSet;
 	}
 
 	/**
@@ -195,18 +210,30 @@ class Form implements ProvidesFormData
 
 	/**
 	 * @param callable $filter
-	 * @param int      $filterFlag (see array_filter)
 	 *
-	 * @link http://php.net/manual/en/function.array-filter.php
 	 * @return array|Interfaces\ProvidesFeedback[]
 	 */
-	public function getFeedbacks( callable $filter = null, int $filterFlag = 0 ) : array
+	public function getFeedbacks( callable $filter = null ) : array
 	{
 		if ( $filter === null )
 		{
 			return $this->feedbacks;
 		}
 
-		return array_filter( $this->feedbacks, $filter, $filterFlag );
+		return array_filter( $this->feedbacks, $filter, ARRAY_FILTER_USE_BOTH );
+	}
+
+	/**
+	 * @return array
+	 */
+	public function jsonSerialize()
+	{
+		return [
+			'formId'     => $this->formId,
+			'token'      => $this->token,
+			'data'       => $this->data,
+			'feedbacks'  => $this->feedbacks,
+			'dataWasSet' => $this->dataWasSet,
+		];
 	}
 }

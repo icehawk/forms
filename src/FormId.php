@@ -17,11 +17,11 @@ class FormId implements IdentifiesForm
 	private $formId;
 
 	/**
-	 * @param string $id
+	 * @param string $formId
 	 */
-	public function __construct( string $id )
+	public function __construct( string $formId )
 	{
-		$this->formId = $id;
+		$this->formId = $formId;
 	}
 
 	/**
