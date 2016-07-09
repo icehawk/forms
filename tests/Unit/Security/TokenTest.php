@@ -3,7 +3,7 @@
  * @author hollodotme
  */
 
-namespace IceHawk\Forms\Tests\Unit\Defaults;
+namespace IceHawk\Forms\Tests\Unit\Security;
 
 use IceHawk\Forms\Security\Token;
 
