@@ -13,7 +13,11 @@ interface ProvidesFormData
 {
 	public function getData() : array;
 
-	public function getValue( string $key );
+	public function get( string $key );
 
-	public function hasValue( string $key ) : bool;
+	public function isset( string $key ) : bool;
+
+	public function set( string $key, $value );
+
+	public function unset( string $key );
 }

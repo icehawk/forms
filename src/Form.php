@@ -5,20 +5,21 @@
 
 namespace IceHawk\Forms;
 
-use IceHawk\Forms\Defaults\Token;
 use IceHawk\Forms\Exceptions\TokenMismatch;
 use IceHawk\Forms\Interfaces\IdentifiesForm;
 use IceHawk\Forms\Interfaces\IdentifiesFormRequestSource;
 use IceHawk\Forms\Interfaces\ProvidesFeedback;
+use IceHawk\Forms\Interfaces\ProvidesFormData;
+use IceHawk\Forms\Security\Token;
 
 /**
  * Class Form
  * @package IceHawk\Forms
  */
-class Form
+class Form implements ProvidesFormData
 {
 	/** @var IdentifiesForm */
-	private $id;
+	private $formId;
 
 	/** @var IdentifiesFormRequestSource */
 	private $token;
@@ -30,11 +31,11 @@ class Form
 	private $feedbacks;
 
 	/**
-	 * @param IdentifiesForm $id
+	 * @param IdentifiesForm $formId
 	 */
-	public function __construct( IdentifiesForm $id )
+	public function __construct( IdentifiesForm $formId )
 	{
-		$this->id = $id;
+		$this->formId = $formId;
 		$this->reset();
 	}
 
@@ -48,9 +49,9 @@ class Form
 	/**
 	 * @return IdentifiesForm
 	 */
-	public function getId() : IdentifiesForm
+	public function getFormId() : IdentifiesForm
 	{
-		return $this->id;
+		return $this->formId;
 	}
 
 	/**
@@ -78,11 +79,11 @@ class Form
 		return $this->token->equals( $token );
 	}
 
-	public function validateToken( IdentifiesFormRequestSource $token )
+	public function guardTokenIsValid( IdentifiesFormRequestSource $token )
 	{
 		if ( !$this->isValidToken( $token ) )
 		{
-			throw ( new TokenMismatch() )->withTokens( $this->token, $token );
+			throw (new TokenMismatch())->withTokens( $this->token, $token );
 		}
 	}
 
@@ -103,11 +104,19 @@ class Form
 	}
 
 	/**
+	 * @return array
+	 */
+	public function getData(): array
+	{
+		return $this->data;
+	}
+
+	/**
 	 * @param string $key
 	 *
 	 * @return bool
 	 */
-	public function hasValue( string $key ) : bool
+	public function isset( string $key ) : bool
 	{
 		return isset($this->data[ $key ]);
 	}
@@ -117,7 +126,7 @@ class Form
 	 *
 	 * @return mixed|null
 	 */
-	public function getValue( string $key )
+	public function get( string $key )
 	{
 		return $this->data[ $key ] ?? null;
 	}
@@ -126,7 +135,7 @@ class Form
 	 * @param string $key
 	 * @param mixed  $value
 	 */
-	public function setValue( string $key, $value )
+	public function set( string $key, $value )
 	{
 		$this->data[ $key ] = $value;
 	}
@@ -134,7 +143,7 @@ class Form
 	/**
 	 * @param string $key
 	 */
-	public function unsetValue( string $key )
+	public function unset( string $key )
 	{
 		unset($this->data[ $key ]);
 	}

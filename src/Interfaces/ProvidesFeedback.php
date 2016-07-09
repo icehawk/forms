@@ -13,5 +13,5 @@ interface ProvidesFeedback extends \JsonSerializable
 {
 	public function getMessage() : string;
 
-	public function getLevel() : string;
+	public function getSeverity() : string;
 }

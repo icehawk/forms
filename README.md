@@ -1,3 +1,10 @@
+[![Build Status](https://travis-ci.org/icehawk/forms.svg?branch=master)](https://travis-ci.org/icehawk/forms)
+[![Coverage Status](https://coveralls.io/repos/github/icehawk/forms/badge.svg?branch=master)](https://coveralls.io/github/icehawk/forms?branch=master)
+[![Latest Stable Version](https://poser.pugx.org/icehawk/forms/v/stable)](https://packagist.org/packages/icehawk/forms) 
+[![Total Downloads](https://poser.pugx.org/icehawk/forms/downloads)](https://packagist.org/packages/icehawk/forms) 
+[![Latest Unstable Version](https://poser.pugx.org/icehawk/forms/v/unstable)](https://packagist.org/packages/icehawk/forms) 
+[![License](https://poser.pugx.org/icehawk/forms/license)](https://packagist.org/packages/icehawk/forms)
+
 # IceHawk\Forms
 
 Forms component for the IceHawk framework

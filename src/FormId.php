@@ -14,14 +14,14 @@ use IceHawk\Forms\Interfaces\IdentifiesForm;
 class FormId implements IdentifiesForm
 {
 	/** @var string */
-	private $id;
+	private $formId;
 
 	/**
 	 * @param string $id
 	 */
 	public function __construct( string $id )
 	{
-		$this->id = $id;
+		$this->formId = $id;
 	}
 
 	/**
@@ -29,7 +29,7 @@ class FormId implements IdentifiesForm
 	 */
 	public function toString() : string
 	{
-		return $this->id;
+		return $this->formId;
 	}
 
 	/**

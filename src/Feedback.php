@@ -27,16 +27,16 @@ class Feedback implements ProvidesFeedback
 	private $message;
 
 	/** @var string */
-	private $level;
+	private $severity;
 
 	/**
 	 * @param string $message
-	 * @param string $level
+	 * @param string $severity
 	 */
-	public function __construct( string $message, string $level = self::ERROR )
+	public function __construct( string $message, string $severity = self::ERROR )
 	{
-		$this->message = $message;
-		$this->level   = $level;
+		$this->message  = $message;
+		$this->severity = $severity;
 	}
 
 	/**
@@ -50,16 +50,16 @@ class Feedback implements ProvidesFeedback
 	/**
 	 * @return string
 	 */
-	public function getLevel() : string
+	public function getSeverity() : string
 	{
-		return $this->level;
+		return $this->severity;
 	}
 
 	public function jsonSerialize()
 	{
 		return [
-			'message' => $this->message,
-			'level'   => $this->level,
+			'message'  => $this->message,
+			'severity' => $this->severity,
 		];
 	}
 }
