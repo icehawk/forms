@@ -5,6 +5,7 @@
 
 namespace IceHawk\Forms\Tests\Unit\Security;
 
+use IceHawk\Forms\Interfaces\IdentifiesFormRequestSource;
 use IceHawk\Forms\Security\Token;
 
 class TokenTest extends \PHPUnit_Framework_TestCase
@@ -23,6 +24,41 @@ class TokenTest extends \PHPUnit_Framework_TestCase
 		$other = Token::fromString( $token->toString() );
 
 		$this->assertTrue( $token->equals( $other ) );
+	}
+
+	public function testTokenNotEqualsOtherClass()
+	{
+		$token = Token::fromString( '123' );
+		$other = new class implements IdentifiesFormRequestSource
+		{
+			public function toString() : string
+			{
+				return '456';
+			}
+
+			public function __toString() : string
+			{
+				return $this->toString();
+			}
+
+			public function equals( IdentifiesFormRequestSource $other ) : bool
+			{
+				return ($other->toString() == $this->toString());
+			}
+
+			public function isExpired() : bool
+			{
+				return false;
+			}
+
+			public function jsonSerialize()
+			{
+				return $this->toString();
+			}
+		};
+
+		$this->assertFalse( $token->equals( $other ) );
+		$this->assertFalse( $other->equals( $token ) );
 	}
 
 	public function testTokenExpires()

@@ -154,6 +154,7 @@ class FormTest extends \PHPUnit_Framework_TestCase
 
 		$this->assertInternalType( 'array', $form->getFeedbacks() );
 		$this->assertEmpty( $form->getFeedbacks() );
+		$this->assertFalse( $form->hasFeedbacks() );
 	}
 
 	public function testCanCheckForFeedbackAtKey()
@@ -164,6 +165,7 @@ class FormTest extends \PHPUnit_Framework_TestCase
 		$feedback = $this->getFeedbackMock( 'test-message', 'warning' );
 		$form->addFeedback( 'test-key', $feedback );
 
+		$this->assertTrue( $form->hasFeedbacks() );
 		$this->assertTrue( $form->hasFeedback( 'test-key' ) );
 		$this->assertFalse( $form->hasFeedback( 'other-key' ) );
 	}
@@ -295,7 +297,7 @@ class FormTest extends \PHPUnit_Framework_TestCase
 
 		$this->assertFalse( $form->wasDataSet() );
 
-		$form->setData( [ ] );
+		$form->setData( [] );
 
 		$this->assertTrue( $form->wasDataSet() );
 

@@ -45,7 +45,7 @@ class Form implements ProvidesFormData
 
 	public function reset()
 	{
-		$this->data       = [ ];
+		$this->data       = [];
 		$this->dataWasSet = false;
 
 		$this->resetFeedbacks();
@@ -54,7 +54,7 @@ class Form implements ProvidesFormData
 
 	public function resetFeedbacks()
 	{
-		$this->feedbacks = [ ];
+		$this->feedbacks = [];
 	}
 
 	/**
@@ -213,6 +213,14 @@ class Form implements ProvidesFormData
 	public function hasFeedback( string $key ) : bool
 	{
 		return isset($this->feedbacks[ $key ]);
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function hasFeedbacks() : bool
+	{
+		return !empty($this->feedbacks);
 	}
 
 	/**
