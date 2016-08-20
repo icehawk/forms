@@ -131,14 +131,14 @@ $form->renewToken( new MyToken() );
 
 # Check if CSRF token is valid (boolean)
 # Checks token string and expiry
-$token = new Token::fromString( $_POST['token'] );
+$token = Token::fromString( $_POST['token'] );
 $form->isTokenValid( $token );
 
 # Check if CSRF token is valid (throws exceptions)
 # Checks token string and expiry
 # Throws \IceHawk\Forms\Excpetion\TokenMismatch, if token string does not match
 # Throws \IceHawk\Forms\Excpetion\TokenHasExpired, if token has expired
-$token = new Token::fromString( $_POST['token'] );
+$token = Token::fromString( $_POST['token'] );
 $form->guardTokenIsValid( $token );
 
 # Check if token is expired
@@ -174,7 +174,10 @@ $form->addFeedbacks(
 # Feedback implementation must follow the \IceHawk\Forms\Interfaces\ProvidesFeedback interface
 $form->addFeedback( 'firstname', new MyFeedback( 'Firstname is invalid.' ) );
 
-# Check for feedback
+# Check for feedbacks
+$form->hasFeedbacks(); # true
+
+# Check for single feedback
 if ( $form->hasFeedback( 'username' ) )
 {
     # Retrieve single feedback
