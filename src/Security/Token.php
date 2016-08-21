@@ -15,7 +15,7 @@ use IceHawk\Forms\Interfaces\IdentifiesFormRequestSource;
  */
 final class Token implements IdentifiesFormRequestSource
 {
-	const DELIMITER   = '//';
+	const DELIMITER   = '[expiry]';
 
 	const DATE_FORMAT = 'Y-m-d H:i:s';
 
