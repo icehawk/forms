@@ -27,7 +27,7 @@ final class Token implements IdentifiesFormRequestSource
 
 	public function __construct()
 	{
-		$this->token = random_bytes( 64 );
+		$this->token = base64_encode( random_bytes( 64 ) );
 	}
 
 	/**
