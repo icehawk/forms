@@ -1,6 +1,14 @@
-<?php
+<?php declare(strict_types = 1);
 /**
- * @author hollodotme
+ * Copyright (c) 2016 Holger Woltersdorf & Contributors
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  */
 
 namespace IceHawk\Forms;
@@ -34,9 +42,6 @@ class Form implements ProvidesFormData
 	/** @var bool */
 	private $dataWasSet;
 
-	/**
-	 * @param IdentifiesForm $formId
-	 */
 	public function __construct( IdentifiesForm $formId )
 	{
 		$this->formId = $formId;
@@ -57,20 +62,14 @@ class Form implements ProvidesFormData
 		$this->feedbacks = [];
 	}
 
-	/**
-	 * @return IdentifiesForm
-	 */
 	public function getFormId() : IdentifiesForm
 	{
 		return $this->formId;
 	}
 
-	/**
-	 * @param IdentifiesFormRequestSource|null $token
-	 */
 	public function renewToken( IdentifiesFormRequestSource $token = null )
 	{
-		if ( $token === null )
+		if ( null === $token )
 		{
 			$this->token = new Token();
 		}
@@ -80,22 +79,11 @@ class Form implements ProvidesFormData
 		}
 	}
 
-	/**
-	 * @param IdentifiesFormRequestSource $token
-	 *
-	 * @return bool
-	 */
 	public function isTokenValid( IdentifiesFormRequestSource $token ) : bool
 	{
 		return ($this->token->equals( $token ) && !$this->token->isExpired());
 	}
 
-	/**
-	 * @param IdentifiesFormRequestSource $token
-	 *
-	 * @throws TokenHasExpired
-	 * @throws TokenMismatch
-	 */
 	public function guardTokenIsValid( IdentifiesFormRequestSource $token )
 	{
 		if ( !$this->token->equals( $token ) )
@@ -114,80 +102,48 @@ class Form implements ProvidesFormData
 		return $this->token->isExpired();
 	}
 
-	/**
-	 * @return IdentifiesFormRequestSource
-	 */
 	public function getToken() : IdentifiesFormRequestSource
 	{
 		return $this->token;
 	}
 
-	/**
-	 * @param array $data
-	 */
 	public function setData( array $data )
 	{
 		$this->data       = $data;
 		$this->dataWasSet = true;
 	}
 
-	/**
-	 * @return array
-	 */
 	public function getData(): array
 	{
 		return $this->data;
 	}
 
-	/**
-	 * @param string $key
-	 *
-	 * @return bool
-	 */
 	public function isset( string $key ) : bool
 	{
 		return isset($this->data[ $key ]);
 	}
 
-	/**
-	 * @param string $key
-	 *
-	 * @return mixed|null
-	 */
 	public function get( string $key )
 	{
 		return $this->data[ $key ] ?? null;
 	}
 
-	/**
-	 * @param string $key
-	 * @param mixed  $value
-	 */
 	public function set( string $key, $value )
 	{
 		$this->data[ $key ] = $value;
 		$this->dataWasSet   = true;
 	}
 
-	/**
-	 * @param string $key
-	 */
 	public function unset( string $key )
 	{
 		unset($this->data[ $key ]);
 	}
 
-	/**
-	 * @return bool
-	 */
 	public function wasDataSet() : bool
 	{
 		return $this->dataWasSet;
 	}
 
-	/**
-	 * @param array|ProvidesFeedback[] $feedbacks
-	 */
 	public function addFeedbacks( array $feedbacks )
 	{
 		foreach ( $feedbacks as $key => $feedback )
@@ -196,38 +152,21 @@ class Form implements ProvidesFormData
 		}
 	}
 
-	/**
-	 * @param string           $key
-	 * @param ProvidesFeedback $feedback
-	 */
 	public function addFeedback( string $key, ProvidesFeedback $feedback )
 	{
 		$this->feedbacks[ $key ] = $feedback;
 	}
 
-	/**
-	 * @param string $key
-	 *
-	 * @return bool
-	 */
 	public function hasFeedback( string $key ) : bool
 	{
 		return isset($this->feedbacks[ $key ]);
 	}
 
-	/**
-	 * @return bool
-	 */
 	public function hasFeedbacks() : bool
 	{
 		return !empty($this->feedbacks);
 	}
 
-	/**
-	 * @param string $key
-	 *
-	 * @return ProvidesFeedback
-	 */
 	public function getFeedback( string $key ) : ProvidesFeedback
 	{
 		if ( $this->hasFeedback( $key ) )
@@ -238,14 +177,9 @@ class Form implements ProvidesFormData
 		return new Feedback( '', Feedback::NONE );
 	}
 
-	/**
-	 * @param callable $filter
-	 *
-	 * @return array|Interfaces\ProvidesFeedback[]
-	 */
 	public function getFeedbacks( callable $filter = null ) : array
 	{
-		if ( $filter === null )
+		if ( null === $filter )
 		{
 			return $this->feedbacks;
 		}
@@ -253,9 +187,6 @@ class Form implements ProvidesFormData
 		return array_filter( $this->feedbacks, $filter, ARRAY_FILTER_USE_BOTH );
 	}
 
-	/**
-	 * @return array
-	 */
 	public function jsonSerialize()
 	{
 		return [
