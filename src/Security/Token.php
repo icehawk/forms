@@ -1,6 +1,14 @@
-<?php
+<?php declare(strict_types = 1);
 /**
- * @author hollodotme
+ * Copyright (c) 2016 Holger Woltersdorf & Contributors
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  */
 
 namespace IceHawk\Forms\Security;
@@ -30,13 +38,7 @@ final class Token implements IdentifiesFormRequestSource
 		$this->token = base64_encode( random_bytes( 64 ) );
 	}
 
-	/**
-	 * @param int $seconds
-	 *
-	 * @throws InvalidExpiryInterval
-	 * @return Token
-	 */
-	public function expiresIn( int $seconds ) : self
+	public function expiresIn( int $seconds ) : Token
 	{
 		if ( $seconds > 0 )
 		{
@@ -48,9 +50,6 @@ final class Token implements IdentifiesFormRequestSource
 		throw (new InvalidExpiryInterval())->withSeconds( $seconds );
 	}
 
-	/**
-	 * @return string
-	 */
 	public function toString() : string
 	{
 		if ( $this->expiry instanceof \DateTimeImmutable )
@@ -65,17 +64,11 @@ final class Token implements IdentifiesFormRequestSource
 		return base64_encode( $rawToken );
 	}
 
-	/**
-	 * @return string
-	 */
 	public function __toString() : string
 	{
 		return $this->toString();
 	}
 
-	/**
-	 * @return string
-	 */
 	public function jsonSerialize()
 	{
 		return $this->toString();
@@ -101,13 +94,7 @@ final class Token implements IdentifiesFormRequestSource
 		return false;
 	}
 
-	/**
-	 * @param string $tokenString
-	 *
-	 * @throws InvalidTokenString
-	 * @return Token
-	 */
-	public static function fromString( string $tokenString ) : self
+	public static function fromString( string $tokenString ) : Token
 	{
 		$rawToken = base64_decode( $tokenString, true );
 
