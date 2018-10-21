@@ -1,25 +1,24 @@
 {
     "_readme": [
         "This file locks the dependencies of your project to a known state",
-        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "hash": "c0b5397a3228a492c68e41fb5224894f",
-    "content-hash": "caee9aa8316523b644417a65621686ac",
+    "content-hash": "6c4c5fc548906b5d43b00772a469fe13",
     "packages": [],
     "packages-dev": [
         {
             "name": "tm/tooly-composer-script",
-            "version": "1.2.1",
+            "version": "1.2.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tommy-muehle/tooly-composer-script.git",
-                "reference": "be34f34ebd83bd25ee388240fcb1b55f109adb6b"
+                "reference": "53cc0551122145b4ae4c523e64f3628329ef8ea5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tommy-muehle/tooly-composer-script/zipball/be34f34ebd83bd25ee388240fcb1b55f109adb6b",
-                "reference": "be34f34ebd83bd25ee388240fcb1b55f109adb6b",
+                "url": "https://api.github.com/repos/tommy-muehle/tooly-composer-script/zipball/53cc0551122145b4ae4c523e64f3628329ef8ea5",
+                "reference": "53cc0551122145b4ae4c523e64f3628329ef8ea5",
                 "shasum": ""
             },
             "require": {
@@ -30,6 +29,7 @@
                 "composer/composer": "1.*",
                 "mikey179/vfsstream": "1.6.*",
                 "php-mock/php-mock-phpunit": "1.1.*",
+                "symfony/console": "^3.0",
                 "tm/gpg-verifier": "1.*"
             },
             "suggest": {
@@ -85,7 +85,7 @@
                 "phar-handling",
                 "phar-management"
             ],
-            "time": "2016-09-13 10:42:40"
+            "time": "2018-03-20T21:26:34+00:00"
         }
     ],
     "aliases": [],
