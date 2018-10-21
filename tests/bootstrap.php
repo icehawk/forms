@@ -11,4 +11,18 @@
  * all copies or substantial portions of the Software.
  */
 
-require(__DIR__ . '/../../vendor/autoload.php');
+if (
+	extension_loaded( 'xdebug' )
+	&& version_compare( '2.6.0', phpversion( 'xdebug' ), '<=' )
+)
+{
+	/** @noinspection PhpUndefinedFunctionInspection */
+	/** @noinspection PhpUndefinedConstantInspection */
+	xdebug_set_filter(
+		XDEBUG_FILTER_CODE_COVERAGE,
+		XDEBUG_PATH_WHITELIST,
+		[dirname( __DIR__ ) . '/src']
+	);
+}
+
+require __DIR__ . '/../vendor/autoload.php';
