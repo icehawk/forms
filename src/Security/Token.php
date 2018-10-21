@@ -1,4 +1,4 @@
-<?php declare(strict_types = 1);
+<?php declare(strict_types=1);
 /**
  * Copyright (c) 2016 Holger Woltersdorf & Contributors
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -13,9 +13,14 @@
 
 namespace IceHawk\Forms\Security;
 
+use DateTimeImmutable;
+use Exception;
 use IceHawk\Forms\Exceptions\InvalidExpiryInterval;
 use IceHawk\Forms\Exceptions\InvalidTokenString;
 use IceHawk\Forms\Interfaces\IdentifiesFormRequestSource;
+use function base64_encode;
+use function count;
+use function random_bytes;
 
 /**
  * Class Token
@@ -30,19 +35,29 @@ final class Token implements IdentifiesFormRequestSource
 	/** @var string */
 	private $token;
 
-	/** @var \DateTimeImmutable */
+	/** @var false|DateTimeImmutable */
 	private $expiry;
 
+	/**
+	 * @throws Exception
+	 */
 	public function __construct()
 	{
 		$this->token = base64_encode( random_bytes( 64 ) );
 	}
 
+	/**
+	 * @param int $seconds
+	 *
+	 * @throws InvalidExpiryInterval
+	 * @throws Exception
+	 * @return Token
+	 */
 	public function expiresIn( int $seconds ) : Token
 	{
 		if ( $seconds > 0 )
 		{
-			$this->expiry = new \DateTimeImmutable( sprintf( '+%d seconds', $seconds ) );
+			$this->expiry = new DateTimeImmutable( sprintf( '+%d seconds', $seconds ) );
 
 			return $this;
 		}
@@ -52,7 +67,7 @@ final class Token implements IdentifiesFormRequestSource
 
 	public function toString() : string
 	{
-		if ( $this->expiry instanceof \DateTimeImmutable )
+		if ( $this->expiry instanceof DateTimeImmutable )
 		{
 			$rawToken = $this->token . self::DELIMITER . $this->expiry->format( self::DATE_FORMAT );
 		}
@@ -76,24 +91,35 @@ final class Token implements IdentifiesFormRequestSource
 
 	public function equals( IdentifiesFormRequestSource $other ) : bool
 	{
-		if ( $other instanceof Token )
+		if ( $other instanceof self )
 		{
-			return ($other->token == $this->token);
+			return ($other->token === $this->token);
 		}
 
 		return false;
 	}
 
+	/**
+	 * @throws Exception
+	 * @return bool
+	 */
 	public function isExpired() : bool
 	{
-		if ( $this->expiry instanceof \DateTimeImmutable )
+		if ( $this->expiry instanceof DateTimeImmutable )
 		{
-			return (new \DateTimeImmutable() > $this->expiry);
+			return (new DateTimeImmutable() > $this->expiry);
 		}
 
 		return false;
 	}
 
+	/**
+	 * @param string $tokenString
+	 *
+	 * @throws InvalidTokenString
+	 * @throws Exception
+	 * @return Token
+	 */
 	public static function fromString( string $tokenString ) : Token
 	{
 		$rawToken = base64_decode( $tokenString, true );
@@ -105,9 +131,9 @@ final class Token implements IdentifiesFormRequestSource
 			$token        = new self();
 			$token->token = $parts[0];
 
-			if ( count( $parts ) == 2 )
+			if ( count( $parts ) === 2 )
 			{
-				$token->expiry = \DateTimeImmutable::createFromFormat( self::DATE_FORMAT, $parts[1] );
+				$token->expiry = DateTimeImmutable::createFromFormat( self::DATE_FORMAT, $parts[1] );
 			}
 
 			return $token;

@@ -14,9 +14,15 @@
 namespace IceHawk\Forms\Tests\Unit;
 
 use IceHawk\Forms\FormId;
+use function json_encode;
+use PHPUnit\Framework\TestCase;
 
-class FormIdTest extends \PHPUnit_Framework_TestCase
+class FormIdTest extends TestCase
 {
+	/**
+	 * @throws \PHPUnit\Framework\ExpectationFailedException
+	 * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
+	 */
 	public function testCanBeRepresentedAsString()
 	{
 		$formId = new FormId( 'test-form-id' );
@@ -25,6 +31,10 @@ class FormIdTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals( 'test-form-id', $formId->toString() );
 	}
 
+	/**
+	 * @throws \PHPUnit\Framework\ExpectationFailedException
+	 * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
+	 */
 	public function testCanBeEncodedAsJson()
 	{
 		$formId = new FormId( 'test-form-id' );

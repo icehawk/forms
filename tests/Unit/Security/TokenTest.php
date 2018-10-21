@@ -1,4 +1,4 @@
-<?php declare(strict_types = 1);
+<?php declare(strict_types=1);
 /**
  * Copyright (c) 2016 Holger Woltersdorf & Contributors
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -13,11 +13,20 @@
 
 namespace IceHawk\Forms\Tests\Unit\Security;
 
+use IceHawk\Forms\Exceptions\InvalidExpiryInterval;
+use IceHawk\Forms\Exceptions\InvalidTokenString;
 use IceHawk\Forms\Interfaces\IdentifiesFormRequestSource;
 use IceHawk\Forms\Security\Token;
+use PHPUnit\Framework\TestCase;
+use function json_encode;
 
-class TokenTest extends \PHPUnit_Framework_TestCase
+class TokenTest extends TestCase
 {
+	/**
+	 * @throws \IceHawk\Forms\Exceptions\InvalidTokenString
+	 * @throws \PHPUnit\Framework\ExpectationFailedException
+	 * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
+	 */
 	public function testTokenEqualsOther()
 	{
 		$token = new Token();
@@ -26,6 +35,12 @@ class TokenTest extends \PHPUnit_Framework_TestCase
 		$this->assertTrue( $token->equals( $other ) );
 	}
 
+	/**
+	 * @throws \IceHawk\Forms\Exceptions\InvalidExpiryInterval
+	 * @throws \IceHawk\Forms\Exceptions\InvalidTokenString
+	 * @throws \PHPUnit\Framework\ExpectationFailedException
+	 * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
+	 */
 	public function testTokenEqualsOtherWithExpiry()
 	{
 		$token = (new Token())->expiresIn( 2 );
@@ -34,6 +49,11 @@ class TokenTest extends \PHPUnit_Framework_TestCase
 		$this->assertTrue( $token->equals( $other ) );
 	}
 
+	/**
+	 * @throws \IceHawk\Forms\Exceptions\InvalidTokenString
+	 * @throws \PHPUnit\Framework\ExpectationFailedException
+	 * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
+	 */
 	public function testTokenNotEqualsOtherClass()
 	{
 		$token = Token::fromString( '123' );
@@ -51,7 +71,7 @@ class TokenTest extends \PHPUnit_Framework_TestCase
 
 			public function equals( IdentifiesFormRequestSource $other ) : bool
 			{
-				return ($other->toString() == $this->toString());
+				return ($other->toString() === $this->toString());
 			}
 
 			public function isExpired() : bool
@@ -69,6 +89,12 @@ class TokenTest extends \PHPUnit_Framework_TestCase
 		$this->assertFalse( $other->equals( $token ) );
 	}
 
+	/**
+	 * @throws \IceHawk\Forms\Exceptions\InvalidExpiryInterval
+	 * @throws \IceHawk\Forms\Exceptions\InvalidTokenString
+	 * @throws \PHPUnit\Framework\ExpectationFailedException
+	 * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
+	 */
 	public function testTokenExpires()
 	{
 		$token = (new Token())->expiresIn( 1 );
@@ -84,21 +110,46 @@ class TokenTest extends \PHPUnit_Framework_TestCase
 	}
 
 	/**
-	 * @expectedException \IceHawk\Forms\Exceptions\InvalidExpiryInterval
+	 * @throws \Exception
 	 */
 	public function testInvalidExpiryIntervalThrowsException()
 	{
-		(new Token())->expiresIn( -2 );
+		try
+		{
+			/** @noinspection UnusedFunctionResultInspection */
+			(new Token())->expiresIn( -2 );
+			$this->fail( 'Expected InvalidExpiryInterval exception to be thrown.' );
+		}
+		catch ( InvalidExpiryInterval $e )
+		{
+			$this->assertSame( -2, $e->getSeconds() );
+		}
 	}
 
 	/**
-	 * @expectedException \IceHawk\Forms\Exceptions\InvalidTokenString
+	 * @throws \PHPUnit\Framework\AssertionFailedError
+	 * @throws \PHPUnit\Framework\ExpectationFailedException
+	 * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
 	 */
 	public function testInvalidTokenStringThrowsException()
 	{
-		Token::fromString( 'Invalid•String' );
+		try
+		{
+			/** @noinspection PhpUnhandledExceptionInspection */
+			Token::fromString( 'Invalid•String' );
+
+			$this->fail( 'Expected InvalidTokenString exceptions to be thrown.' );
+		}
+		catch ( InvalidTokenString $e )
+		{
+			$this->assertSame( 'Invalid•String', $e->getTokenString() );
+		}
 	}
 
+	/**
+	 * @throws \PHPUnit\Framework\ExpectationFailedException
+	 * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
+	 */
 	public function testCanGetTokenAsString()
 	{
 		$token = new Token();
