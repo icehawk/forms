@@ -1,4 +1,4 @@
-<?php declare(strict_types = 1);
+<?php declare(strict_types=1);
 /**
  * Copyright (c) 2016 Holger Woltersdorf & Contributors
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -14,9 +14,15 @@
 namespace IceHawk\Forms\Tests\Unit;
 
 use IceHawk\Forms\Feedback;
+use PHPUnit\Framework\TestCase;
+use function json_encode;
 
-class FeedbackTest extends \PHPUnit_Framework_TestCase
+class FeedbackTest extends TestCase
 {
+	/**
+	 * @throws \PHPUnit\Framework\ExpectationFailedException
+	 * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
+	 */
 	public function testCanConstructWithMessage()
 	{
 		$feedback = new Feedback( 'Test-Message' );
@@ -25,6 +31,10 @@ class FeedbackTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals( Feedback::ERROR, $feedback->getSeverity() );
 	}
 
+	/**
+	 * @throws \PHPUnit\Framework\ExpectationFailedException
+	 * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
+	 */
 	public function testCanConstructWithMessageAndSeverity()
 	{
 		$feedback = new Feedback( 'Test-Message', Feedback::NOTICE );
@@ -33,10 +43,14 @@ class FeedbackTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals( Feedback::NOTICE, $feedback->getSeverity() );
 	}
 
+	/**
+	 * @throws \PHPUnit\Framework\ExpectationFailedException
+	 * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
+	 */
 	public function testCanSerializeAsJson()
 	{
 		$feedback     = new Feedback( 'Test-Message', Feedback::WARNING );
-		$expectedJson = json_encode( [ 'message' => 'Test-Message', 'severity' => 'warning' ] );
+		$expectedJson = json_encode( ['message' => 'Test-Message', 'severity' => 'warning'] );
 
 		$jsonFeedback = json_encode( $feedback );
 
