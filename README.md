@@ -1,11 +1,6 @@
-[![Join the chat at https://gitter.im/icehawk/forms](https://badges.gitter.im/icehawk/forms.svg)](https://gitter.im/icehawk/forms?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Build Status](https://travis-ci.org/icehawk/forms.svg?branch=master)](https://travis-ci.org/icehawk/forms)
-[![Coverage Status](https://coveralls.io/repos/github/icehawk/forms/badge.svg?branch=master)](https://coveralls.io/github/icehawk/forms?branch=master)
 [![Latest Stable Version](https://poser.pugx.org/icehawk/forms/v/stable)](https://packagist.org/packages/icehawk/forms) 
 [![Total Downloads](https://poser.pugx.org/icehawk/forms/downloads)](https://packagist.org/packages/icehawk/forms) 
-[![Latest Unstable Version](https://poser.pugx.org/icehawk/forms/v/unstable)](https://packagist.org/packages/icehawk/forms) 
 [![License](https://poser.pugx.org/icehawk/forms/license)](https://packagist.org/packages/icehawk/forms)
-[![phpstan enabled](https://img.shields.io/badge/phpstan-enabled-green.svg)](https://github.com/phpstan/phpstan)
 
 ![IceHawk Framework](https://icehawk.github.io/images/Logo-Flying-Tail-White.png)
 
