@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  console:
+    build:
+      dockerfile: Dockerfile
+      context: ./.docker/development/php/cli
+      target: console
+    restart: "no"
+    volumes:
+      - ./:/repo
+    working_dir: /repo
+    environment:
+      #XDEBUG_SESSION: "1"
+      XDEBUG_CONFIG: "mode=develop,debug client_host=host.docker.internal client_port=9003"
+      PHP_IDE_CONFIG: "serverName=forms.icehawk.de"
+    networks:
+      - forms
+
+  phive:
+    image: hyperized/phive:latest
+    restart: 'no'
+    volumes:
+      - ./:/repo
+      - phive:/root/.phive
+    working_dir: /repo
+    networks:
+      - forms
+
+networks:
+  forms:
+
+volumes:
+  phive:

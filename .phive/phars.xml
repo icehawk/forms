@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phive xmlns="https://phar.io/phive">
+  <phar name="phpunit" version="^9.5.13" installed="9.5.13" location="./.tools/phpunit.phar" copy="true"/>
+  <phar name="phpstan" version="^1.4.2" installed="1.4.2" location="./.tools/phpstan.phar" copy="true"/>
+  <phar name="phpbu" version="^6.0.16" installed="6.0.16" location="./.tools/phpbu.phar" copy="true"/>
+  <phar name="psalm" version="^4.18.1" installed="4.18.1" location="./.tools/psalm.phar" copy="true"/>
+  <phar name="composer" version="^2.2.5" installed="2.2.5" location="./.tools/composer.phar" copy="true"/>
+</phive>
