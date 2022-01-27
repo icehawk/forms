@@ -3,6 +3,7 @@
 namespace IceHawk\Forms\Tests\Unit\Feedbacks;
 
 use IceHawk\Forms\Feedbacks\Feedback;
+use IceHawk\Forms\Tests\Unit\Inheritance\TestFeedback;
 use JsonException;
 use PHPUnit\Framework\TestCase;
 use function json_encode;
@@ -34,5 +35,14 @@ final class FeedbackTest extends TestCase
 
 		self::assertJson( $jsonFeedback );
 		self::assertSame( $expectedJson, $jsonFeedback );
+	}
+
+	public function testInheritance() : void
+	{
+		$feedback = TestFeedback::test( 'key', 'message' );
+
+		self::assertSame( 'key', $feedback->getKey() );
+		self::assertSame( 'message', $feedback->getMessage() );
+		self::assertSame( 'test', $feedback->getSeverity() );
 	}
 }

@@ -4,6 +4,7 @@ namespace IceHawk\Forms\Tests\Unit;
 
 use IceHawk\Forms\Exceptions\InvalidFormIdException;
 use IceHawk\Forms\FormId;
+use IceHawk\Forms\Tests\Unit\Inheritance\TestFormId;
 use JsonException;
 use PHPUnit\Framework\TestCase;
 use function json_encode;
@@ -35,5 +36,12 @@ final class FormIdTest extends TestCase
 		$formId = FormId::new( 'test-form-id' );
 
 		self::assertEquals( '"test-form-id"', json_encode( $formId, JSON_THROW_ON_ERROR ) );
+	}
+
+	public function testInheritance() : void
+	{
+		$formId = TestFormId::testForm();
+
+		self::assertSame( 'testForm', (string)$formId );
 	}
 }

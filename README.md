@@ -114,7 +114,7 @@ final class MyFormId extends FormId
     # Named constructors for each form ID is a good practice for example
     public static function myForm() : self
     {
-        return new self('myForm');
+        return self::new('myForm');
     }
 }
 
@@ -196,7 +196,7 @@ final class MyFeedback extends Feedback
     # Named constructors for each severity is a good practice for example
     public static function invalid(string $key, string $message) : self
     {
-        return new self($key, $message, 'invalid');
+        return self::new($key, $message, 'invalid');
     }
 }
 

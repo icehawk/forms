@@ -7,12 +7,12 @@ use IceHawk\Forms\Interfaces\FormIdInterface;
 
 class FormId implements FormIdInterface
 {
-	public static function new( string $formId ) : static
+	final public static function new( string $formId ) : static
 	{
 		return new static( trim( $formId ) );
 	}
 
-	final protected function __construct( private string $formId )
+	final private function __construct( private string $formId )
 	{
 		$this->guardValueIsValid( $formId );
 	}
