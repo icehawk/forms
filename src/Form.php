@@ -1,54 +1,55 @@
-<?php declare(strict_types = 1);
-/**
- * Copyright (c) 2016 Holger Woltersdorf & Contributors
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- */
+<?php declare(strict_types=1);
 
 namespace IceHawk\Forms;
 
-use IceHawk\Forms\Exceptions\TokenHasExpired;
-use IceHawk\Forms\Exceptions\TokenMismatch;
-use IceHawk\Forms\Interfaces\IdentifiesForm;
-use IceHawk\Forms\Interfaces\IdentifiesFormRequestSource;
-use IceHawk\Forms\Interfaces\ProvidesFeedback;
-use IceHawk\Forms\Interfaces\ProvidesFormData;
+use Exception;
+use IceHawk\Forms\Exceptions\TokenHasExpiredException;
+use IceHawk\Forms\Exceptions\TokenMismatchException;
+use IceHawk\Forms\Feedbacks\Feedbacks;
+use IceHawk\Forms\Interfaces\FeedbackCollectionInterface;
+use IceHawk\Forms\Interfaces\FeedbackInterface;
+use IceHawk\Forms\Interfaces\FormIdInterface;
+use IceHawk\Forms\Interfaces\FormInterface;
+use IceHawk\Forms\Interfaces\TokenInterface;
 use IceHawk\Forms\Security\Token;
+use JetBrains\PhpStorm\ArrayShape;
 
-/**
- * Class Form
- * @package IceHawk\Forms
- */
-class Form implements ProvidesFormData
+final class Form implements FormInterface
 {
-	/** @var IdentifiesForm */
-	private $formId;
+	private TokenInterface $token;
 
-	/** @var IdentifiesFormRequestSource */
-	private $token;
+	/** @var array<string, mixed> */
+	private array $data;
 
-	/** @var array */
-	private $data;
+	private FeedbackCollectionInterface $feedbacks;
 
-	/** @var array|ProvidesFeedback[] */
-	private $feedbacks;
+	private bool $dataWasSet;
 
-	/** @var bool */
-	private $dataWasSet;
-
-	public function __construct( IdentifiesForm $formId )
+	/**
+	 * @param FormIdInterface $formId
+	 *
+	 * @return Form
+	 * @throws Exception
+	 */
+	public static function new( FormIdInterface $formId ) : self
 	{
-		$this->formId = $formId;
+		return new self( $formId );
+	}
+
+	/**
+	 * @param FormIdInterface $formId
+	 *
+	 * @throws Exception
+	 */
+	private function __construct( private FormIdInterface $formId )
+	{
 		$this->reset();
 	}
 
-	public function reset()
+	/**
+	 * @throws Exception
+	 */
+	public function reset() : void
 	{
 		$this->data       = [];
 		$this->dataWasSet = false;
@@ -57,43 +58,47 @@ class Form implements ProvidesFormData
 		$this->renewToken();
 	}
 
-	public function resetFeedbacks()
+	public function resetFeedbacks() : void
 	{
-		$this->feedbacks = [];
+		$this->feedbacks = Feedbacks::new();
 	}
 
-	public function getFormId() : IdentifiesForm
+	public function getFormId() : FormIdInterface
 	{
 		return $this->formId;
 	}
 
-	public function renewToken( IdentifiesFormRequestSource $token = null )
+	/**
+	 * @param TokenInterface|null $token
+	 *
+	 * @throws Exception
+	 */
+	public function renewToken( ?TokenInterface $token = null ) : void
 	{
-		if ( null === $token )
-		{
-			$this->token = new Token();
-		}
-		else
-		{
-			$this->token = $token;
-		}
+		$this->token = $token ?? Token::new();
 	}
 
-	public function isTokenValid( IdentifiesFormRequestSource $token ) : bool
+	public function isTokenValid( TokenInterface $token ) : bool
 	{
 		return ($this->token->equals( $token ) && !$this->token->isExpired());
 	}
 
-	public function guardTokenIsValid( IdentifiesFormRequestSource $token )
+	/**
+	 * @param TokenInterface $token
+	 *
+	 * @throws TokenHasExpiredException
+	 * @throws TokenMismatchException
+	 */
+	public function guardTokenIsValid( TokenInterface $token ) : void
 	{
 		if ( !$this->token->equals( $token ) )
 		{
-			throw (new TokenMismatch())->withTokens( $this->token, $token );
+			throw TokenMismatchException::withTokens( $this->token, $token );
 		}
 
 		if ( $this->token->isExpired() )
 		{
-			throw new TokenHasExpired();
+			throw TokenHasExpiredException::new();
 		}
 	}
 
@@ -102,41 +107,44 @@ class Form implements ProvidesFormData
 		return $this->token->isExpired();
 	}
 
-	public function getToken() : IdentifiesFormRequestSource
+	public function getToken() : TokenInterface
 	{
 		return $this->token;
 	}
 
-	public function setData( array $data )
+	public function setData( array $data ) : void
 	{
 		$this->data       = $data;
 		$this->dataWasSet = true;
 	}
 
-	public function getData(): array
+	/**
+	 * @return array<string, mixed>
+	 */
+	public function getData() : array
 	{
 		return $this->data;
 	}
 
 	public function isset( string $key ) : bool
 	{
-		return isset($this->data[ $key ]);
+		return isset( $this->data[ $key ] );
 	}
 
-	public function get( string $key )
+	public function get( string $key ) : mixed
 	{
 		return $this->data[ $key ] ?? null;
 	}
 
-	public function set( string $key, $value )
+	public function set( string $key, mixed $value ) : void
 	{
 		$this->data[ $key ] = $value;
 		$this->dataWasSet   = true;
 	}
 
-	public function unset( string $key )
+	public function unset( string $key ) : void
 	{
-		unset($this->data[ $key ]);
+		unset( $this->data[ $key ] );
 	}
 
 	public function wasDataSet() : bool
@@ -144,50 +152,34 @@ class Form implements ProvidesFormData
 		return $this->dataWasSet;
 	}
 
-	public function addFeedbacks( array $feedbacks )
+	public function addFeedbacks( FeedbackInterface $feedback, FeedbackInterface ...$feedbacks ) : void
 	{
-		foreach ( $feedbacks as $key => $feedback )
-		{
-			$this->addFeedback( $key, $feedback );
-		}
-	}
-
-	public function addFeedback( string $key, ProvidesFeedback $feedback )
-	{
-		$this->feedbacks[ $key ] = $feedback;
-	}
-
-	public function hasFeedback( string $key ) : bool
-	{
-		return isset($this->feedbacks[ $key ]);
+		$this->feedbacks = $this->feedbacks->add( $feedback, ...$feedbacks );
 	}
 
 	public function hasFeedbacks() : bool
 	{
-		return !empty($this->feedbacks);
+		return $this->feedbacks->count() > 0;
 	}
 
-	public function getFeedback( string $key ) : ProvidesFeedback
+	public function getFeedbacks() : FeedbackCollectionInterface
 	{
-		if ( $this->hasFeedback( $key ) )
-		{
-			return $this->feedbacks[ $key ];
-		}
-
-		return new Feedback( '', Feedback::NONE );
+		return $this->feedbacks;
 	}
 
-	public function getFeedbacks( callable $filter = null ) : array
-	{
-		if ( null === $filter )
-		{
-			return $this->feedbacks;
-		}
-
-		return array_filter( $this->feedbacks, $filter, ARRAY_FILTER_USE_BOTH );
-	}
-
-	public function jsonSerialize()
+	/**
+	 * @return array<string, mixed>
+	 */
+	#[ArrayShape(
+		[
+			'formId'     => FormIdInterface::class,
+			'token'      => TokenInterface::class,
+			'data'       => 'array',
+			'feedbacks'  => FeedbackCollectionInterface::class,
+			'dataWasSet' => 'bool',
+		]
+	)]
+	public function jsonSerialize() : array
 	{
 		return [
 			'formId'     => $this->formId,
