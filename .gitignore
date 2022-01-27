@@ -1,13 +1,8 @@
-.idea
-
-# vagrant
-.vagrant/
-vagrant
-
-# composer
-vendor/
-
-# locally generated docs
-build/api/
-build/phpdox/
-build/logs/
+/.idea
+/.tools/*
+/vendor/
+/composer.lock
+/tests/.coverage-cache
+/tests/clover.xml
+/tests/.phpunit.result.cache
+!.gitkeep
