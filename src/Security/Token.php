@@ -1,79 +1,62 @@
 <?php declare(strict_types=1);
-/**
- * Copyright (c) 2016 Holger Woltersdorf & Contributors
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- */
 
 namespace IceHawk\Forms\Security;
 
 use DateTimeImmutable;
+use DateTimeInterface;
 use Exception;
-use IceHawk\Forms\Exceptions\InvalidExpiryInterval;
-use IceHawk\Forms\Exceptions\InvalidTokenString;
-use IceHawk\Forms\Interfaces\IdentifiesFormRequestSource;
+use IceHawk\Forms\Exceptions\InvalidExpiryIntervalException;
+use IceHawk\Forms\Exceptions\InvalidTokenStringException;
+use IceHawk\Forms\Interfaces\TokenInterface;
 use function base64_encode;
 use function count;
 use function random_bytes;
+use function sprintf;
 
-/**
- * Class Token
- * @package IceHawk\Forms\Security
- */
-final class Token implements IdentifiesFormRequestSource
+final class Token implements TokenInterface
 {
-	const DELIMITER   = '[expiry]';
+	private const BYTE_LENGTH = 64;
 
-	const DATE_FORMAT = 'Y-m-d H:i:s';
+	private const DELIMITER   = '[expiry]';
 
-	/** @var string */
-	private $token;
-
-	/** @var false|DateTimeImmutable */
-	private $expiry;
+	private const DATE_FORMAT = 'Y-m-d H:i:s';
 
 	/**
 	 * @throws Exception
 	 */
-	public function __construct()
+	public static function new() : self
 	{
-		$this->token = base64_encode( random_bytes( 64 ) );
+		return new self( base64_encode( random_bytes( self::BYTE_LENGTH ) ) );
 	}
 
 	/**
 	 * @param int $seconds
 	 *
-	 * @throws InvalidExpiryInterval
-	 * @throws Exception
 	 * @return Token
+	 * @throws InvalidExpiryIntervalException
+	 * @throws Exception
 	 */
-	public function expiresIn( int $seconds ) : Token
+	public static function newWithExpiry( int $seconds ) : self
 	{
-		if ( $seconds > 0 )
+		if ( $seconds < 1 )
 		{
-			$this->expiry = new DateTimeImmutable( sprintf( '+%d seconds', $seconds ) );
-
-			return $this;
+			throw InvalidExpiryIntervalException::withSeconds( $seconds );
 		}
 
-		throw (new InvalidExpiryInterval())->withSeconds( $seconds );
+		$expiry = new DateTimeImmutable( sprintf( '+%d seconds', $seconds ) );
+
+		return new self( base64_encode( random_bytes( self::BYTE_LENGTH ) ), $expiry );
 	}
+
+	private function __construct( private string $token, private ?DateTimeInterface $expiry = null ) { }
 
 	public function toString() : string
 	{
-		if ( $this->expiry instanceof DateTimeImmutable )
+		$rawToken = $this->token;
+
+		if ( null !== $this->expiry )
 		{
 			$rawToken = $this->token . self::DELIMITER . $this->expiry->format( self::DATE_FORMAT );
-		}
-		else
-		{
-			$rawToken = $this->token;
 		}
 
 		return base64_encode( $rawToken );
@@ -84,29 +67,25 @@ final class Token implements IdentifiesFormRequestSource
 		return $this->toString();
 	}
 
-	public function jsonSerialize()
+	public function jsonSerialize() : string
 	{
 		return $this->toString();
 	}
 
-	public function equals( IdentifiesFormRequestSource $other ) : bool
+	public function equals( TokenInterface $other ) : bool
 	{
-		if ( $other instanceof self )
-		{
-			return ($other->token === $this->token);
-		}
-
-		return false;
+		return (string)$other === $this->toString();
 	}
 
 	/**
-	 * @throws Exception
 	 * @return bool
+	 * @throws Exception
 	 */
 	public function isExpired() : bool
 	{
-		if ( $this->expiry instanceof DateTimeImmutable )
+		if ( $this->expiry instanceof DateTimeInterface )
 		{
+			/** @noinspection InsufficientTypesControlInspection */
 			return (new DateTimeImmutable() > $this->expiry);
 		}
 
@@ -116,29 +95,33 @@ final class Token implements IdentifiesFormRequestSource
 	/**
 	 * @param string $tokenString
 	 *
-	 * @throws InvalidTokenString
-	 * @throws Exception
 	 * @return Token
+	 * @throws Exception
+	 * @throws InvalidTokenStringException
 	 */
-	public static function fromString( string $tokenString ) : Token
+	public static function fromString( string $tokenString ) : self
 	{
 		$rawToken = base64_decode( $tokenString, true );
 
-		if ( $rawToken !== false )
+		if ( false === $rawToken )
 		{
-			$parts = explode( self::DELIMITER, $rawToken );
-
-			$token        = new self();
-			$token->token = $parts[0];
-
-			if ( count( $parts ) === 2 )
-			{
-				$token->expiry = DateTimeImmutable::createFromFormat( self::DATE_FORMAT, $parts[1] );
-			}
-
-			return $token;
+			throw InvalidTokenStringException::withTokenString( $tokenString );
 		}
 
-		throw (new InvalidTokenString())->withTokenString( $tokenString );
+		$parts = explode( self::DELIMITER, $rawToken );
+
+		if ( count( $parts ) === 1 )
+		{
+			return new self( $parts[0] );
+		}
+
+		$expiry = DateTimeImmutable::createFromFormat( self::DATE_FORMAT, $parts[1] );
+
+		if ( false === $expiry )
+		{
+			throw InvalidTokenStringException::withTokenString( $tokenString );
+		}
+
+		return new self( $parts[0], $expiry );
 	}
 }
