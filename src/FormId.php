@@ -7,9 +7,9 @@ use IceHawk\Forms\Interfaces\FormIdInterface;
 
 class FormId implements FormIdInterface
 {
-	public static function new( string $formId ) : self
+	public static function new( string $formId ) : static
 	{
-		return new self( trim( $formId ) );
+		return new static( trim( $formId ) );
 	}
 
 	final protected function __construct( private string $formId )

@@ -7,9 +7,9 @@ use JetBrains\PhpStorm\ArrayShape;
 
 class Feedback implements FeedbackInterface
 {
-	public static function new( string $key, string $message, string $severity ) : self
+	public static function new( string $key, string $message, string $severity ) : static
 	{
-		return new self( $key, $message, $severity );
+		return new static( $key, $message, $severity );
 	}
 
 	final protected function __construct( private string $key, private string $message, private string $severity ) { }
