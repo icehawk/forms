@@ -1,3 +1,4 @@
+[![QA](https://github.com/icehawk/forms/actions/workflows/qa.yml/badge.svg)](https://github.com/icehawk/forms/actions/workflows/qa.yml)
 [![Latest Stable Version](https://poser.pugx.org/icehawk/forms/v/stable)](https://packagist.org/packages/icehawk/forms)
 [![Total Downloads](https://poser.pugx.org/icehawk/forms/downloads)](https://packagist.org/packages/icehawk/forms)
 [![License](https://poser.pugx.org/icehawk/forms/license)](https://packagist.org/packages/icehawk/forms)
