@@ -1,4 +1,4 @@
-FROM php:8.1-cli-alpine AS builder
+FROM php:8.0-cli-alpine AS builder
 
 RUN set -ex && apk update && apk upgrade --available
 
