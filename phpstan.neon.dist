@@ -1,0 +1,12 @@
+parameters:
+    paths:
+        - src
+        - tests
+    level: 8
+    phpVersion: 80000
+    bootstrapFiles:
+        - ./.tools/phpunit.phar
+    editorUrl: 'phpstorm://open?file=%%file%%&line=%%line%%'
+    reportUnmatchedIgnoredErrors: true
+    ignoreErrors:
+        - '#^Attribute class JetBrains\\PhpStorm\\.+ does not exist\.#'
