@@ -34,9 +34,7 @@ tests: dcvalidate phplint phpstan phpunit
 ## Run PHP linting
 phplint:
 	$(DOCKER_COMPOSE_ISOLATED_RUN_COMMAND) console \
-	sh -c "sh /repo/.tools/phplint.sh -p8 -f'*.php' /repo/.deployer /repo/config /repo/public /repo/src /repo/tests"
-	$(DOCKER_COMPOSE_ISOLATED_RUN_COMMAND) console \
-	sh -c "sh /repo/.tools/phplint.sh -p8 -f'*.phtml' /repo/src"
+	sh -c "sh /repo/.tools/phplint.sh -p8 -f'*.php' /repo/src /repo/tests"
 .PHONY: phplint
 
 ## Run PHPStan
@@ -109,10 +107,8 @@ composer-outdated:
 
 phpUnitKey 		= 4AA394086372C20A
 phpStanKey 		= CF1A108D0E7AE720
-phpBuKey 		= 24CF04DD7016F97D
-phpPsalmKey 	= 12CE0F1D262429A5
 composerKey 	= CBB3D576F2A0946F
-trustedKeys 	= "$(phpUnitKey),$(phpStanKey),$(phpBuKey),$(phpPsalmKey),$(composerKey)"
+trustedKeys 	= "$(phpUnitKey),$(phpStanKey),$(composerKey)"
 
 ## Run install & update of tools via Phive
 update-tools:
