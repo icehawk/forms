@@ -1,5 +1,5 @@
-[![Latest Stable Version](https://poser.pugx.org/icehawk/forms/v/stable)](https://packagist.org/packages/icehawk/forms) 
-[![Total Downloads](https://poser.pugx.org/icehawk/forms/downloads)](https://packagist.org/packages/icehawk/forms) 
+[![Latest Stable Version](https://poser.pugx.org/icehawk/forms/v/stable)](https://packagist.org/packages/icehawk/forms)
+[![Total Downloads](https://poser.pugx.org/icehawk/forms/downloads)](https://packagist.org/packages/icehawk/forms)
 [![License](https://poser.pugx.org/icehawk/forms/license)](https://packagist.org/packages/icehawk/forms)
 
 ![IceHawk Framework](https://icehawk.github.io/images/Logo-Flying-Tail-White.png)
@@ -9,6 +9,8 @@
 Forms component for the [IceHawk](https://github.com/icehawk/icehawk) framework.
 
 Provides a convenient object to store form data and feedback with CSRF protection support.
+
+## Token
 
 ### Usage
 
@@ -20,19 +22,19 @@ namespace MyVendor\MyProject;
 use IceHawk\Forms\Security\Token;
 
 # Create a new token (without expiry)
-$token = new Token();
+$token = Token::new();
 
 echo $token->toString(); # or echo $token;
 
 # Create a new token (with expiry in 50 seconds)
-$token = (new Token())->expiresIn( 50 );
+$token = Token::newWithExpiry( 50 );
 
 # Create a token from string (i.e. when sent through a post form)
 $token = Token::fromString( '...' );
 
 # Compare tokens
-$token   = new Token();
-$other   = new Token();
+$token   = Token::new();
+$other   = Token::new();
 $another = Token::fromString($token->toString());
 
 $token->equals($other);   # false
@@ -43,7 +45,7 @@ $other->equals($another); # true
 # ...
 
 # Check token expiry
-$token = (new Token())->expiresIn( 2 );
+$token = Token::newWithExpiry(2);
 
 $token->isExpired(); # false
 
@@ -63,14 +65,17 @@ Simple value object for form feedback with severity.
 
 namespace MyVendor\MyProject;
 
-use IceHawk\Forms\Feedback;
+use IceHawk\Forms\Feedbacks\Feedback;
 
-# Create a new feedback with default severity (Feedback::ERROR)
-$feedback = new Feedback( 'message' );
+# Create a new feedback message for a key with low severity
+# Keys usually refer to input fields or form groups
+$feedback = Feedback::new( 'key', 'message', 'low' );
 
-# Create a new feedback with explicit severity
-# Available severities: Feedback::ERROR (default), Feedback::WARNING, Feedback::NOTICE, Feedback::SUCCESS, Feedback::NONE 
-$feedback = new Feedback( 'message', Feedback::WARNING );
+# Create a new feedback message for another key with high severity
+$feedback = Feedback::new( 'another-key', 'message', 'high' );
+
+# Retrieve feedback key
+$key = $feedback->getKey();
 
 # Retrieve feedback message
 $message = $feedback->getMessage();
@@ -81,7 +86,8 @@ $severity = $feedback->getSeverity();
 
 ## Form
 
-Aggregating object to be stored in session for securely exchanging form data and feedback between read and write side of a web application.  
+Aggregating object to be stored in session for securely exchanging form data and feedback between read and write side of
+a web application.
 
 ### Usage
 
@@ -92,11 +98,26 @@ namespace MyVendor\MyProject;
 
 use IceHawk\Forms\Form;
 use IceHawk\Forms\FormId;
-use IceHawk\Forms\Feedback;
+use IceHawk\Forms\Feedbacks\Feedback;
+use IceHawk\Forms\Interfaces\FeedbackInterface;
 use IceHawk\Forms\Security\Token;
 
 # Create a new instance identified by a form ID
-$form = new Form( new FormId( 'myForm' ) );
+$form = Form::new( FormId::new( 'myForm' ) );
+
+# Create a new instance identified by your own form ID
+# Form-ID implementations must follow the \IceHawk\Forms\Interfaces\FormIdInterface
+# or extend the FormId class
+final class MyFormId extends FormId
+{
+    # Named constructors for each form ID is a good practice for example
+    public static function myForm() : self
+    {
+        return new self('myForm');
+    }
+}
+
+$form = Form::new( MyFormId::myForm() );
 
 # Check if form has already data set
 if ( $form->wasDataSet() )
@@ -120,10 +141,10 @@ $token = $form->getToken();
 $form->renewToken();
 
 # Renew the CSRF token with expiry in 10 minutes
-$form->renewToken( (new Token())->expiresIn( 600 ) );
+$form->renewToken( Token::newWithExpiry( 600 ) );
 
-# Renew the CSRF token with own token implementation
-# Token implementation must follow the \IceHawk\Forms\Interfaces\IdentifiesFormRequestSource interface
+# Renew the CSRF token with your own token implementation
+# Token implementations must follow the \IceHawk\Forms\Interfaces\TokenInterface
 $form->renewToken( new MyToken() );
 
 # Check if CSRF token is valid (boolean)
@@ -133,12 +154,12 @@ $form->isTokenValid( $token );
 
 # Check if CSRF token is valid (throws exceptions)
 # Checks token string and expiry
-# Throws \IceHawk\Forms\Excpetion\TokenMismatch, if token string does not match
-# Throws \IceHawk\Forms\Excpetion\TokenHasExpired, if token has expired
+# Throws \IceHawk\Forms\Excpetion\TokenMismatchException, if token string does not match
+# Throws \IceHawk\Forms\Excpetion\TokenHasExpiredException, if token has expired
 $token = Token::fromString( $_POST['token'] );
 $form->guardTokenIsValid( $token );
 
-# Check if token is expired
+# Check if token has expired
 $form->hasTokenExpired();
 
 # Check if a key isset
@@ -154,55 +175,57 @@ $formData = $form->getData();
 # Unset a value
 $form->unset( 'username' );
 
-# Add single feedback (using default \IceHawk\Forms\Feedback class)
+# Add single feedback (using default \IceHawk\Forms\Feedbacks\Feedback class)
 # Feedback can but must not be bound to data keys
-# Feedback::ERROR is the default severity
-$form->addFeedback( 'username', new Feedback( 'Username is invalid', Feedback::ERROR );
+$form->addFeedbacks( Feedback::new( 'username', 'Username is invalid', 'error' ) );
 
-# Add multiple feedbacks (using default \IceHawk\Forms\Feedback class)
+# Add multiple feedbacks (using default \IceHawk\Forms\Feedbacks\Feedbacks\Feedback class)
+# You can add multiple feedbacks for the same key
 $form->addFeedbacks(
-    [
-        'general'  => new Feedback( 'Some errors occurred.', Feedback::WARNING ),
-        'username' => new Feedback( 'Username is invalid.', Feedback::ERROR ),
-    ]
+    Feedback::new( 'general', 'Some errors occurred', 'hint' ),
+    Feedback::new( 'username', 'Username is invalid', 'error' ),
+    Feedback::new( 'username', 'Username must have at least 3 characters', 'hint' ),
 );
 
-# Add feedback with own feedback implementation
-# Feedback implementation must follow the \IceHawk\Forms\Interfaces\ProvidesFeedback interface
-$form->addFeedback( 'firstname', new MyFeedback( 'Firstname is invalid.' ) );
-
-# Check for feedbacks
-$form->hasFeedbacks(); # true
-
-# Check for single feedback
-if ( $form->hasFeedback( 'username' ) )
+# Add feedback with your own feedback implementation
+# Feedback implementations must follow the \IceHawk\Forms\Interfaces\FeedbackInterface
+# or extend the default Feedback class
+final class MyFeedback extends Feedback
 {
-    # Retrieve single feedback
-    $usernameFeedback = $form->getFeedback( 'username' );
+    # Named constructors for each severity is a good practice for example
+    public static function invalid(string $key, string $message) : self
+    {
+        return new self($key, $message, 'invalid');
+    }
+}
+
+$form->addFeedbacks( MyFeedback::invalid( 'firstname', 'Firstname is invalid.' ) );
+
+# Check for any feedbacks
+$form->hasFeedbacks();
+
+# Check for feedbacks for a specific key
+if ( $form->getFeedbacks()->has( 'username' ) )
+{
+    # Retrieve first feedback for a specific key
+    $usernameFeedback = $form->getFeedbacks()->getFirst( 'username' );
+    
+    # Retrieve all feedbacks for a specific key
+    $usernameFeedbacks = $form->getFeedbacks()->get( 'username' );
 }
 
 # Retrieve all feedbacks
 $feedbacks = $form->getFeedbacks();
 
-# Retrive feedbacks filtered by keys
-$filteredFeedbacks = $form->getFeedbacks(
-    function( ProvidesFeedback $feedback, string $key )
-    {
-        return ($key == 'general');  
-    }
-);
-
 # Retrive feedbacks filtered by severity
-$filteredFeedbacks = $form->getFeedbacks(
-    function( ProvidesFeedback $feedback )
-    {
-        return ($feedback->getSeverity() == Feedback::ERROR);
-    }
+$filteredFeedbacks = $form->getFeedbacks()->filter(
+    static fn(FeedbackInterface $fb): bool => $fb->getSeverity() === 'low'
 );
 
-# Retrieve an empty feedback for a key that was not set
-# Returns new Feedback( '', Feedback::NONE );
-$emptyFeedback = $form->getFeedback( 'email' );
+# Get an array of all message strings
+$messages = $form->getFeedbacks()->map(
+    static fn( FeedbackInterface $fb ): string => $fb->getMessage()
+);
 
 # Reset all feedbacks
 $form->resetFeedbacks();
