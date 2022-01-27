@@ -12,7 +12,7 @@ class Feedback implements FeedbackInterface
 		return new self( $key, $message, $severity );
 	}
 
-	final private function __construct( private string $key, private string $message, private string $severity ) { }
+	final protected function __construct( private string $key, private string $message, private string $severity ) { }
 
 	public function getKey() : string
 	{

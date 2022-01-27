@@ -12,7 +12,7 @@ class FormId implements FormIdInterface
 		return new self( trim( $formId ) );
 	}
 
-	final private function __construct( private string $formId )
+	final protected function __construct( private string $formId )
 	{
 		$this->guardValueIsValid( $formId );
 	}
