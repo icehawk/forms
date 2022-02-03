@@ -1,44 +1,69 @@
-<?php declare(strict_types = 1);
-/**
- * Copyright (c) 2016 Holger Woltersdorf & Contributors
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- */
+<?php declare(strict_types=1);
 
 namespace IceHawk\Forms\Tests\Unit;
 
+use IceHawk\Forms\Exceptions\InvalidFormIdException;
 use IceHawk\Forms\FormId;
-use function json_encode;
+use IceHawk\Forms\Tests\Unit\Inheritance\TestFormId;
+use JsonException;
 use PHPUnit\Framework\TestCase;
+use function json_encode;
+use const JSON_THROW_ON_ERROR;
 
-class FormIdTest extends TestCase
+final class FormIdTest extends TestCase
 {
-	/**
-	 * @throws \PHPUnit\Framework\ExpectationFailedException
-	 * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
-	 */
-	public function testCanBeRepresentedAsString()
+	public function testToString() : void
 	{
-		$formId = new FormId( 'test-form-id' );
+		$formId = FormId::new( 'test-form-id' );
 
-		$this->assertEquals( 'test-form-id', (string)$formId );
-		$this->assertEquals( 'test-form-id', $formId->toString() );
+		self::assertEquals( 'test-form-id', (string)$formId );
+		self::assertEquals( 'test-form-id', $formId->toString() );
+	}
+
+	public function testThrowsExceptionForEmptyFormId() : void
+	{
+		$this->expectException( InvalidFormIdException::class );
+		$this->expectExceptionMessage( 'Invalid value for form ID: empty' );
+
+		FormId::new( ' ' );
 	}
 
 	/**
-	 * @throws \PHPUnit\Framework\ExpectationFailedException
-	 * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
+	 * @throws JsonException
 	 */
-	public function testCanBeEncodedAsJson()
+	public function testJsonSerialize() : void
 	{
-		$formId = new FormId( 'test-form-id' );
+		$formId = FormId::new( 'test-form-id' );
 
-		$this->assertEquals( '"test-form-id"', json_encode( $formId ) );
+		self::assertEquals( '"test-form-id"', json_encode( $formId, JSON_THROW_ON_ERROR ) );
+	}
+
+	public function testInheritance() : void
+	{
+		$formId = TestFormId::testForm();
+
+		self::assertSame( 'testForm', (string)$formId );
+	}
+
+	public function testEquals() : void
+	{
+		$formIdUnit  = FormId::new( 'unit' );
+		$formIdUnit2 = FormId::new( 'unit' );
+		$formIdTest  = FormId::new( 'test' );
+
+		$customFormIdUnit = TestFormId::new( 'unit' );
+		$customFormIdTest = TestFormId::new( 'test' );
+
+		self::assertTrue( $formIdUnit->equals( $formIdUnit2 ) );
+		self::assertTrue( $formIdUnit2->equals( $formIdUnit ) );
+
+		self::assertFalse( $formIdUnit->equals( $formIdTest ) );
+		self::assertFalse( $formIdTest->equals( $formIdUnit ) );
+
+		self::assertFalse( $formIdUnit2->equals( $formIdTest ) );
+		self::assertFalse( $formIdTest->equals( $formIdUnit2 ) );
+
+		self::assertFalse( $formIdUnit->equals( $customFormIdUnit ) );
+		self::assertFalse( $formIdTest->equals( $customFormIdTest ) );
 	}
 }

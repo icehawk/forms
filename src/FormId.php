@@ -1,32 +1,33 @@
-<?php declare(strict_types = 1);
-/**
- * Copyright (c) 2016 Holger Woltersdorf & Contributors
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- */
+<?php declare(strict_types=1);
 
 namespace IceHawk\Forms;
 
-use IceHawk\Forms\Interfaces\IdentifiesForm;
+use IceHawk\Forms\Exceptions\InvalidFormIdException;
+use IceHawk\Forms\Interfaces\FormIdInterface;
 
-/**
- * Class FormId
- * @package IceHawk\Forms
- */
-class FormId implements IdentifiesForm
+class FormId implements FormIdInterface
 {
-	/** @var string */
-	private $formId;
-
-	public function __construct( string $formId )
+	final public static function new( string $formId ) : static
 	{
-		$this->formId = $formId;
+		return new static( trim( $formId ) );
+	}
+
+	final private function __construct( private string $formId )
+	{
+		$this->guardValueIsValid( $formId );
+	}
+
+	/**
+	 * @param string $formId
+	 *
+	 * @throws InvalidFormIdException
+	 */
+	private function guardValueIsValid( string $formId ) : void
+	{
+		if ( '' === $formId )
+		{
+			throw InvalidFormIdException::empty();
+		}
 	}
 
 	public function toString() : string
@@ -39,8 +40,13 @@ class FormId implements IdentifiesForm
 		return $this->toString();
 	}
 
-	public function jsonSerialize()
+	public function jsonSerialize() : string
 	{
 		return $this->toString();
+	}
+
+	public function equals( FormIdInterface $other ) : bool
+	{
+		return $this::class === $other::class && $this->toString() === $other->toString();
 	}
 }

@@ -1,46 +1,36 @@
 <?php declare(strict_types=1);
-/**
- * Copyright (c) 2016 Holger Woltersdorf & Contributors
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- */
 
 namespace IceHawk\Forms\Tests\Unit;
 
-use IceHawk\Forms\Exceptions\TokenHasExpired;
-use IceHawk\Forms\Exceptions\TokenMismatch;
-use IceHawk\Forms\Feedback;
+use Exception;
+use IceHawk\Forms\Exceptions\TokenHasExpiredException;
+use IceHawk\Forms\Exceptions\TokenMismatchException;
 use IceHawk\Forms\Form;
-use IceHawk\Forms\Interfaces\IdentifiesForm;
-use IceHawk\Forms\Interfaces\IdentifiesFormRequestSource;
-use IceHawk\Forms\Interfaces\ProvidesFeedback;
+use IceHawk\Forms\Interfaces\FeedbackInterface;
+use IceHawk\Forms\Interfaces\FormIdInterface;
+use IceHawk\Forms\Interfaces\TokenInterface;
 use IceHawk\Forms\Security\Token;
+use JsonException;
 use PHPUnit\Framework\TestCase;
+use function iterator_to_array;
 use function json_encode;
 
-class FormTest extends TestCase
+final class FormTest extends TestCase
 {
 	/**
-	 * @throws \PHPUnit\Framework\ExpectationFailedException
-	 * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
+	 * @throws Exception
 	 */
-	public function testCanConstructWithFormId()
+	public function testCanConstructWithFormId() : void
 	{
 		$formId = $this->getFormIdMock();
-		$form   = new Form( $formId );
+		$form   = Form::new( $formId );
 
-		$this->assertEquals( $formId, $form->getFormId() );
+		self::assertSame( $formId, $form->getFormId() );
 	}
 
-	private function getFormIdMock() : \PHPUnit_Framework_MockObject_MockObject
+	private function getFormIdMock() : FormIdInterface
 	{
-		$formId = $this->getMockBuilder( IdentifiesForm::class )->getMock();
+		$formId = $this->getMockBuilder( FormIdInterface::class )->getMock();
 		$formId->method( 'toString' )->willReturn( 'test-form-id' );
 		$formId->method( '__toString' )->willReturn( 'test-form-id' );
 		$formId->method( 'jsonSerialize' )->willReturn( '"test-form-id"' );
@@ -49,48 +39,47 @@ class FormTest extends TestCase
 	}
 
 	/**
-	 * @throws \PHPUnit\Framework\ExpectationFailedException
-	 * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
+	 * @throws Exception
 	 */
-	public function testHasDefaultTokenAfterConstruction()
+	public function testDefaults() : void
 	{
-		$formId = $this->getFormIdMock();
-		$form   = new Form( $formId );
+		$form = Form::new( $this->getFormIdMock() );
 
-		$this->assertInstanceOf( Token::class, $form->getToken() );
-		$this->assertNotEmpty( $form->getToken()->toString() );
+		self::assertInstanceOf( Token::class, $form->getToken() );
+		self::assertNotEmpty( $form->getToken()->toString() );
+		self::assertCount( 0, $form->getFeedbacks() );
+		self::assertFalse( $form->hasFeedbacks() );
+		self::assertFalse( $form->wasDataSet() );
+		self::assertSame( [], $form->getData() );
 	}
 
 	/**
-	 * @throws \PHPUnit\Framework\ExpectationFailedException
-	 * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
+	 * @throws Exception
 	 */
-	public function testCanRenewToken()
+	public function testCanRenewToken() : void
 	{
-		/** @var IdentifiesForm $formId */
-		$formId = $this->getFormIdMock();
-		$form   = new Form( $formId );
+		$form = Form::new( $this->getFormIdMock() );
 
 		$initialToken = $form->getToken();
 
 		$form->renewToken();
 
-		$this->assertInstanceOf( Token::class, $form->getToken() );
-		$this->assertFalse( $form->getToken()->equals( $initialToken ) );
+		self::assertInstanceOf( Token::class, $form->getToken() );
+		self::assertFalse( $form->getToken()->equals( $initialToken ) );
 
 		$currentToken = $form->getToken();
 
 		$userDefinedToken = $this->getTokenMock();
 		$form->renewToken( $userDefinedToken );
 
-		$this->assertNotInstanceOf( Token::class, $form->getToken() );
-		$this->assertFalse( $form->getToken()->equals( $initialToken ) );
-		$this->assertFalse( $form->getToken()->equals( $currentToken ) );
+		self::assertNotInstanceOf( Token::class, $form->getToken() );
+		self::assertFalse( $form->getToken()->equals( $initialToken ) );
+		self::assertFalse( $form->getToken()->equals( $currentToken ) );
 	}
 
-	private function getTokenMock() : \PHPUnit_Framework_MockObject_MockObject
+	private function getTokenMock() : TokenInterface
 	{
-		$token = $this->getMockBuilder( IdentifiesFormRequestSource::class )->getMock();
+		$token = $this->getMockBuilder( TokenInterface::class )->getMock();
 		$token->method( 'toString' )->willReturn( 'test-token-string' );
 		$token->method( '__toString' )->willReturn( 'test-token-string' );
 		$token->method( 'isExpired' )->willReturn( false );
@@ -100,36 +89,28 @@ class FormTest extends TestCase
 	}
 
 	/**
-	 * @throws \PHPUnit\Framework\ExpectationFailedException
-	 * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
+	 * @throws Exception
 	 */
-	public function testCanCheckIfTokenIsValid()
+	public function testCanCheckIfTokenIsValid() : void
 	{
-		/** @var IdentifiesForm $formId */
-		$formId = $this->getFormIdMock();
-		$form   = new Form( $formId );
+		$form = Form::new( $this->getFormIdMock() );
 
 		$initialToken = $form->getToken();
 
-		$this->assertTrue( $form->isTokenValid( $initialToken ) );
+		self::assertTrue( $form->isTokenValid( $initialToken ) );
 
 		$form->renewToken();
 
-		$this->assertFalse( $form->isTokenValid( $initialToken ) );
+		self::assertFalse( $form->isTokenValid( $initialToken ) );
 	}
 
 	/**
-	 * @throws TokenHasExpired
-	 * @throws TokenMismatch
-	 * @throws \PHPUnit\Framework\AssertionFailedError
-	 * @throws \PHPUnit\Framework\ExpectationFailedException
-	 * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
+	 * @throws Exception
 	 */
-	public function testThrowsExceptionWhenGuardingTokenStringValidity()
+	public function testGuardingTokenIsValid() : void
 	{
-		/** @var IdentifiesForm $formId */
-		$formId       = $this->getFormIdMock();
-		$form         = new Form( $formId );
+		$form = Form::new( $this->getFormIdMock() );
+
 		$initialToken = $form->getToken();
 
 		$form->guardTokenIsValid( $initialToken );
@@ -139,108 +120,71 @@ class FormTest extends TestCase
 		try
 		{
 			$form->guardTokenIsValid( $initialToken );
-			$this->fail( 'Expected TokenMismatch exception to be thrown.' );
+
+			$this->fail( 'Expected TokenMismatchException to be thrown.' );
 		}
-		catch ( TokenMismatch $e )
+		catch ( TokenMismatchException $e )
 		{
-			$this->assertSame( $form->getToken(), $e->getFormToken() );
-			$this->assertSame( $initialToken, $e->getCheckToken() );
+			self::assertSame( $form->getToken(), $e->getFormToken() );
+			self::assertSame( $initialToken, $e->getCheckToken() );
 		}
 	}
 
 	/**
-	 * @throws TokenHasExpired
-	 * @throws TokenMismatch
-	 * @throws \IceHawk\Forms\Exceptions\InvalidExpiryInterval
+	 * @throws Exception
 	 */
-	public function testThrowsExceptionWhenGuardingTokenExpiry()
+	public function testGuardTokenWithExpiryIsValid() : void
 	{
-		$this->expectException( TokenHasExpired::class );
-
-		/** @var IdentifiesForm $formId */
-		$formId = $this->getFormIdMock();
-		$form   = new Form( $formId );
-
-		$form->renewToken( (new Token())->expiresIn( 1 ) );
+		$form = Form::new( $this->getFormIdMock() );
+		$form->renewToken( Token::newWithExpiry( 1 ) );
 		$token = $form->getToken();
 
 		$form->guardTokenIsValid( $token );
 
 		sleep( 2 );
 
+		$this->expectException( TokenHasExpiredException::class );
+		$this->expectExceptionMessage( 'Token has expired' );
+
 		$form->guardTokenIsValid( $token );
 	}
 
 	/**
-	 * @throws \IceHawk\Forms\Exceptions\InvalidExpiryInterval
-	 * @throws \PHPUnit\Framework\ExpectationFailedException
-	 * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
+	 * @throws Exception
 	 */
-	public function testCanCheckIfTokenHasExpired()
+	public function testCanCheckIfTokenHasExpired() : void
 	{
-		/** @var IdentifiesForm $formId */
-		$formId = $this->getFormIdMock();
-		$form   = new Form( $formId );
+		$form = Form::new( $this->getFormIdMock() );
+		$form->renewToken( Token::newWithExpiry( 1 ) );
 
-		$form->renewToken( (new Token())->expiresIn( 1 ) );
-
-		$this->assertFalse( $form->hasTokenExpired() );
+		self::assertFalse( $form->hasTokenExpired() );
 
 		sleep( 2 );
 
-		$this->assertTrue( $form->hasTokenExpired() );
+		self::assertTrue( $form->hasTokenExpired() );
 	}
 
 	/**
-	 * @throws \PHPUnit\Framework\ExpectationFailedException
-	 * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
+	 * @throws Exception
 	 */
-	public function testFormDataIsEmptyArrayAfterConstruction()
+	public function testHasFeedbacks() : void
 	{
-		/** @var IdentifiesForm $formId */
-		$formId = $this->getFormIdMock();
-		$form   = new Form( $formId );
+		$form = Form::new( $this->getFormIdMock() );
 
-		$this->assertInternalType( 'array', $form->getData() );
-		$this->assertEmpty( $form->getData() );
+		self::assertFalse( $form->hasFeedbacks() );
+
+		$form->addFeedbacks(
+			$this->getFeedbackMock( 'key1', 'test-message-1', 'low' ),
+			$this->getFeedbackMock( 'key2', 'test-message-2', 'high' ),
+		);
+
+		self::assertTrue( $form->hasFeedbacks() );
 	}
 
-	/**
-	 * @throws \PHPUnit\Framework\ExpectationFailedException
-	 * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
-	 */
-	public function testFormFeedbackIsEmptyArrayAfterConstruction()
+	private function getFeedbackMock( string $key, string $message, string $severity ) : FeedbackInterface
 	{
-		/** @var IdentifiesForm $formId */
-		$formId = $this->getFormIdMock();
-		$form   = new Form( $formId );
-
-		$this->assertInternalType( 'array', $form->getFeedbacks() );
-		$this->assertEmpty( $form->getFeedbacks() );
-		$this->assertFalse( $form->hasFeedbacks() );
-	}
-
-	/**
-	 * @throws \PHPUnit\Framework\ExpectationFailedException
-	 * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
-	 */
-	public function testCanCheckForFeedbackAtKey()
-	{
-		/** @var IdentifiesForm $formId */
-		$formId = $this->getFormIdMock();
-		$form   = new Form( $formId );
-
-		$feedback = $this->getFeedbackMock( 'test-message', 'warning' );
-		$form->addFeedback( 'test-key', $feedback );
-
-		$this->assertTrue( $form->hasFeedbacks() );
-		$this->assertTrue( $form->hasFeedback( 'test-key' ) );
-		$this->assertFalse( $form->hasFeedback( 'other-key' ) );
-	}
-
-	private function getFeedbackMock( string $message, string $severity ) : \PHPUnit_Framework_MockObject_MockObject
-	{
-		$feedback = $this->getMockBuilder( ProvidesFeedback::class )->getMock();
+		$feedback = $this->getMockBuilder( FeedbackInterface::class )->getMock();
+		$feedback->method( 'getKey' )->willReturn( $key );
 		$feedback->method( 'getMessage' )->willReturn( $message );
 		$feedback->method( 'getSeverity' )->willReturn( $severity );
 
@@ -248,270 +192,140 @@ class FormTest extends TestCase
 	}
 
 	/**
-	 * @throws \PHPUnit\Framework\ExpectationFailedException
-	 * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
+	 * @throws Exception
 	 */
-	public function testCanGetSingleFeedback()
+	public function testCanGetAllFeedbacks() : void
 	{
-		/** @var IdentifiesForm $formId */
-		$formId = $this->getFormIdMock();
-		$form   = new Form( $formId );
+		$form = Form::new( $this->getFormIdMock() );
 
-		$feedback = $this->getFeedbackMock( 'test-message', 'warning' );
-		$form->addFeedback( 'test-key', $feedback );
+		self::assertCount( 0, $form->getFeedbacks() );
 
-		$this->assertEquals( $feedback, $form->getFeedback( 'test-key' ) );
+		$feedback1         = $this->getFeedbackMock( 'key1', 'test-message-1', 'low' );
+		$feedback2         = $this->getFeedbackMock( 'key2', 'test-message-2', 'high' );
+		$expectedFeedbacks = [$feedback1, $feedback2];
+
+		$form->addFeedbacks( $feedback1, $feedback2 );
+
+		self::assertCount( 2, $form->getFeedbacks() );
+
+		self::assertSame( $expectedFeedbacks, iterator_to_array( $form->getFeedbacks(), false ) );
 	}
 
 	/**
-	 * @throws \PHPUnit\Framework\ExpectationFailedException
-	 * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
+	 * @throws Exception
 	 */
-	public function testCanGetEmptyFeedbackIfKeyIsNotSet()
+	public function testWasDataSet() : void
 	{
-		/** @var IdentifiesForm $formId */
-		$formId = $this->getFormIdMock();
-		$form   = new Form( $formId );
+		$form = Form::new( $this->getFormIdMock() );
 
-		$expectedFeedback = new Feedback( '', '' );
-
-		$this->assertEquals( $expectedFeedback, $form->getFeedback( 'test-key' ) );
-	}
-
-	/**
-	 * @throws \PHPUnit\Framework\ExpectationFailedException
-	 * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
-	 */
-	public function testCanGetAllFeedbacks()
-	{
-		$formId = $this->getFormIdMock();
-		$form   = new Form( $formId );
-
-		/** @var ProvidesFeedback $feedback1 */
-		$feedback1 = $this->getFeedbackMock( 'test-message1', 'error' );
-		/** @var ProvidesFeedback $feedback2 */
-		$feedback2 = $this->getFeedbackMock( 'test-message2', 'warning' );
-
-		$expectedFeedbacks = [
-			'test-key1' => $feedback1,
-			'test-key2' => $feedback2,
-		];
-
-		$form->addFeedback( 'test-key1', $feedback1 );
-		$form->addFeedback( 'test-key2', $feedback2 );
-
-		$this->assertEquals( $expectedFeedbacks, $form->getFeedbacks() );
-	}
-
-	/**
-	 * @throws \PHPUnit\Framework\ExpectationFailedException
-	 * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
-	 */
-	public function testCanGetFeedbacksFilteredByKey()
-	{
-		/** @var IdentifiesForm $formId */
-		$formId = $this->getFormIdMock();
-		$form   = new Form( $formId );
-
-		/** @var ProvidesFeedback $feedback1 */
-		$feedback1 = $this->getFeedbackMock( 'test-message1', 'error' );
-		/** @var ProvidesFeedback $feedback2 */
-		$feedback2 = $this->getFeedbackMock( 'test-message2', 'warning' );
-
-		$expectedFeedbacks = [
-			'test-key2' => $feedback2,
-		];
-
-		$form->addFeedback( 'test-key1', $feedback1 );
-		$form->addFeedback( 'test-key2', $feedback2 );
-
-		$this->assertEquals(
-			$expectedFeedbacks,
-			$form->getFeedbacks(
-				function ( ProvidesFeedback $feedback, string $key )
-				{
-					return ($key === 'test-key2');
-				}
-			)
-		);
-	}
-
-	/**
-	 * @throws \PHPUnit\Framework\ExpectationFailedException
-	 * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
-	 */
-	public function testCanGetFeedbacksFilteredBySeverity()
-	{
-		/** @var IdentifiesForm $formId */
-		$formId = $this->getFormIdMock();
-		$form   = new Form( $formId );
-
-		/** @var ProvidesFeedback $feedback1 */
-		$feedback1 = $this->getFeedbackMock( 'test-message1', 'error' );
-		/** @var ProvidesFeedback $feedback2 */
-		$feedback2 = $this->getFeedbackMock( 'test-message2', 'warning' );
-
-		$expectedFeedbacks = [
-			'test-key1' => $feedback1,
-		];
-
-		$form->addFeedback( 'test-key1', $feedback1 );
-		$form->addFeedback( 'test-key2', $feedback2 );
-
-		$this->assertEquals(
-			$expectedFeedbacks,
-			$form->getFeedbacks(
-				function ( ProvidesFeedback $feedback )
-				{
-					return ($feedback->getSeverity() === 'error');
-				}
-			)
-		);
-	}
-
-	/**
-	 * @throws \PHPUnit\Framework\ExpectationFailedException
-	 * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
-	 */
-	public function testCanAddMultipleFeedbacks()
-	{
-		/** @var IdentifiesForm $formId */
-		$formId = $this->getFormIdMock();
-		$form   = new Form( $formId );
-
-		$feedback1 = $this->getFeedbackMock( 'test-message1', 'error' );
-		$feedback2 = $this->getFeedbackMock( 'test-message2', 'warning' );
-
-		$form->addFeedbacks(
-			[
-				'test-key1' => $feedback1,
-				'test-key2' => $feedback2,
-			]
-		);
-
-		$this->assertTrue( $form->hasFeedback( 'test-key1' ) );
-		$this->assertTrue( $form->hasFeedback( 'test-key2' ) );
-	}
-
-	/**
-	 * @throws \PHPUnit\Framework\ExpectationFailedException
-	 * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
-	 */
-	public function testCheckIfDataWasSet()
-	{
-		/** @var IdentifiesForm $formId */
-		$formId = $this->getFormIdMock();
-		$form   = new Form( $formId );
-
-		$this->assertFalse( $form->wasDataSet() );
+		self::assertFalse( $form->wasDataSet() );
 
 		$form->setData( [] );
 
-		$this->assertTrue( $form->wasDataSet() );
+		self::assertTrue( $form->wasDataSet() );
 
 		$form->reset();
 
-		$this->assertFalse( $form->wasDataSet() );
+		self::assertFalse( $form->wasDataSet() );
 
 		$form->set( 'test-key', 'test-data' );
 
-		$this->assertTrue( $form->wasDataSet() );
+		self::assertTrue( $form->wasDataSet() );
 	}
 
 	/**
-	 * @throws \PHPUnit\Framework\ExpectationFailedException
-	 * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
+	 * @throws Exception
 	 */
-	public function testCanGetNullForNotSetDataKey()
+	public function testGet() : void
 	{
-		/** @var IdentifiesForm $formId */
-		$formId = $this->getFormIdMock();
-		$form   = new Form( $formId );
+		$form = Form::new( $this->getFormIdMock() );
 
-		$this->assertNull( $form->get( 'test-key' ) );
+		$form->setData( [
+			'unit' => 'test',
+			'test' => 'unit',
+		] );
+
+		self::assertNull( $form->get( 'not-existing-key' ) );
+
+		self::assertSame( 'test', $form->get( 'unit' ) );
+		self::assertSame( 'unit', $form->get( 'test' ) );
 	}
 
 	/**
-	 * @throws \PHPUnit\Framework\ExpectationFailedException
-	 * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
+	 * @throws Exception
 	 */
-	public function testCanGetValueForKey()
+	public function testUnset() : void
 	{
-		/** @var IdentifiesForm $formId */
-		$formId = $this->getFormIdMock();
-		$form   = new Form( $formId );
+		$form = Form::new( $this->getFormIdMock() );
 
-		$form->set( 'test-key', 'test-value' );
+		$form->setData( [
+			'unit' => 'test',
+			'test' => 'unit',
+		] );
 
-		$this->assertEquals( 'test-value', $form->get( 'test-key' ) );
+		self::assertNull( $form->get( 'not-existing-key' ) );
+
+		self::assertSame( 'test', $form->get( 'unit' ) );
+		self::assertSame( 'unit', $form->get( 'test' ) );
+
+		$form->unset( 'unit' );
+
+		self::assertNull( $form->get( 'not-existing-key' ) );
+
+		self::assertSame( 'unit', $form->get( 'test' ) );
+		self::assertNull( $form->get( 'unit' ) );
 	}
 
 	/**
-	 * @throws \PHPUnit\Framework\ExpectationFailedException
-	 * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
+	 * @throws Exception
 	 */
-	public function testCanUnsetDataForKey()
+	public function testReset() : void
 	{
-		/** @var IdentifiesForm $formId */
-		$formId = $this->getFormIdMock();
-		$form   = new Form( $formId );
+		$form = Form::new( $this->getFormIdMock() );
 
-		$form->set( 'test-key', 'test-value' );
-
-		$this->assertEquals( 'test-value', $form->get( 'test-key' ) );
-
-		$form->unset( 'test-key' );
-
-		$this->assertNull( $form->get( 'test-key' ) );
-	}
-
-	/**
-	 * @throws \PHPUnit\Framework\ExpectationFailedException
-	 * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
-	 */
-	public function testCanResetForm()
-	{
-		/** @var IdentifiesForm $formId */
-		$formId       = $this->getFormIdMock();
-		$form         = new Form( $formId );
 		$initialToken = $form->getToken();
 
-		/** @var ProvidesFeedback $feedback */
-		$feedback = $this->getFeedbackMock( 'test-message', 'error' );
-
 		$form->set( 'test-key', 'test-value' );
-		$form->addFeedback( 'test-key', $feedback );
+		$form->addFeedbacks( $this->getFeedbackMock( 'test-key', 'test-message', 'error' ) );
 
-		$this->assertTrue( $form->wasDataSet() );
-		$this->assertTrue( $form->isset( 'test-key' ) );
-		$this->assertTrue( $form->hasFeedback( 'test-key' ) );
-		$this->assertTrue( $form->getToken()->equals( $initialToken ) );
+		self::assertTrue( $form->wasDataSet() );
+		self::assertTrue( $form->isset( 'test-key' ) );
+		self::assertTrue( $form->hasFeedbacks() );
+		self::assertTrue( $form->getToken()->equals( $initialToken ) );
+		self::assertTrue( $form->isTokenValid( $initialToken ) );
 
 		$form->reset();
 
-		$this->assertFalse( $form->wasDataSet() );
-		$this->assertFalse( $form->isset( 'test-key' ) );
-		$this->assertFalse( $form->hasFeedback( 'test-key' ) );
-		$this->assertFalse( $form->getToken()->equals( $initialToken ) );
+		self::assertFalse( $form->wasDataSet() );
+		self::assertFalse( $form->isset( 'test-key' ) );
+		self::assertFalse( $form->hasFeedbacks() );
+		self::assertFalse( $form->getToken()->equals( $initialToken ) );
+		self::assertFalse( $form->isTokenValid( $initialToken ) );
 	}
 
 	/**
-	 * @throws \PHPUnit\Framework\ExpectationFailedException
-	 * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
+	 * @throws JsonException
+	 * @throws Exception
 	 */
-	public function testCanSerializeFormAsJson()
+	public function testJsonSerialize() : void
 	{
-		/** @var IdentifiesForm $formId */
-		$formId = $this->getFormIdMock();
-		$form   = new Form( $formId );
+		$form = Form::new( $this->getFormIdMock() );
 
-		/** @var ProvidesFeedback $feedback */
-		$feedback = $this->getFeedbackMock( 'test-message', 'error' );
+		$form->setData(
+			[
+				'key-test' => 'some-value',
+				'foo'      => 123,
+			]
+		);
 
 		$form->set( 'test-key', 'test-value' );
-		$form->addFeedback( 'test-key', $feedback );
 
-		$formJson     = json_encode( $form );
+		$form->addFeedbacks(
+			$this->getFeedbackMock( 'test-key', 'test-message 1', 'error' ),
+			$this->getFeedbackMock( 'test-key', 'test-message 2', 'warning' ),
+		);
+
+		$formJson     = json_encode( $form, JSON_THROW_ON_ERROR );
 		$expectedJson = json_encode(
 			[
 				'formId'     => $form->getFormId(),
@@ -519,10 +333,11 @@ class FormTest extends TestCase
 				'data'       => $form->getData(),
 				'feedbacks'  => $form->getFeedbacks(),
 				'dataWasSet' => $form->wasDataSet(),
-			]
+			],
+			JSON_THROW_ON_ERROR
 		);
 
-		$this->assertJson( $formJson );
-		$this->assertEquals( $expectedJson, $formJson );
+		self::assertJson( $formJson );
+		self::assertEquals( $expectedJson, $formJson );
 	}
 }
