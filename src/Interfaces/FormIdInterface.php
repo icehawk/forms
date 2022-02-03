@@ -8,4 +8,6 @@ use Stringable;
 interface FormIdInterface extends Stringable, JsonSerializable
 {
 	public function toString() : string;
+
+	public function equals( FormIdInterface $other ) : bool;
 }

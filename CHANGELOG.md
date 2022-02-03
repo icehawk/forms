@@ -8,6 +8,7 @@ to [Semantic Versioning](http://semver.org/) and [Keep a CHANGELOG](http://keepa
 [2.0.0]: https://github.com/icehawk/forms/compare/v1.0.0...v2.0.0
 
 * Switched from Vagrant to docker-compose development environment, see [Contribution Guide](./.github/CONTRIBUTING.md)
+* Add method `FormIdInterface#equals( FormIdInterface $other ) : bool` in order to compare form ID instances with each other
 
 ### Backwards incompatible changes (BC breaks)
 

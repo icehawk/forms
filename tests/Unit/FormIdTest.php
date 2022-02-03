@@ -44,4 +44,26 @@ final class FormIdTest extends TestCase
 
 		self::assertSame( 'testForm', (string)$formId );
 	}
+
+	public function testEquals() : void
+	{
+		$formIdUnit  = FormId::new( 'unit' );
+		$formIdUnit2 = FormId::new( 'unit' );
+		$formIdTest  = FormId::new( 'test' );
+
+		$customFormIdUnit = TestFormId::new( 'unit' );
+		$customFormIdTest = TestFormId::new( 'test' );
+
+		self::assertTrue( $formIdUnit->equals( $formIdUnit2 ) );
+		self::assertTrue( $formIdUnit2->equals( $formIdUnit ) );
+
+		self::assertFalse( $formIdUnit->equals( $formIdTest ) );
+		self::assertFalse( $formIdTest->equals( $formIdUnit ) );
+
+		self::assertFalse( $formIdUnit2->equals( $formIdTest ) );
+		self::assertFalse( $formIdTest->equals( $formIdUnit2 ) );
+
+		self::assertFalse( $formIdUnit->equals( $customFormIdUnit ) );
+		self::assertFalse( $formIdTest->equals( $customFormIdTest ) );
+	}
 }

@@ -44,4 +44,9 @@ class FormId implements FormIdInterface
 	{
 		return $this->toString();
 	}
+
+	public function equals( FormIdInterface $other ) : bool
+	{
+		return $this::class === $other::class && $this->toString() === $other->toString();
+	}
 }
